@@ -359,14 +359,14 @@ export const About = ({ language }: AboutProps) => {
                                     </button>
 
                                     <div
-                                        className="flex-1 p-4 md:p-8 flex items-center justify-center relative min-h-[50vh] bg-black/50 overflow-hidden group"
+                                        className="flex-1 relative min-h-[50vh] bg-black/50 overflow-hidden group"
                                         onTouchStart={handleTouchStart}
                                         onTouchEnd={handleTouchEnd}
                                     >
                                         <img
                                             src={selectedImage.src}
                                             alt={selectedImage.title}
-                                            className="w-full h-full object-contain rounded drop-shadow-2xl select-none pointer-events-none"
+                                            className="absolute inset-4 md:inset-8 w-[calc(100%-2rem)] md:w-[calc(100%-4rem)] h-[calc(100%-2rem)] md:h-[calc(100%-4rem)] object-contain object-center rounded drop-shadow-2xl select-none pointer-events-none"
                                             draggable={false}
                                         />
 
