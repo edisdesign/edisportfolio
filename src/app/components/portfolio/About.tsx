@@ -18,6 +18,7 @@ export const About = ({ language }: AboutProps) => {
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState("");
     const [newCommentName, setNewCommentName] = useState("");
+    const [newCommentEmail, setNewCommentEmail] = useState("");
     const [isLiking, setIsLiking] = useState(false);
 
     const currentIndex = selectedImage ? galleryImages.findIndex(img => img.id === selectedImage.id) : -1;
@@ -80,13 +81,19 @@ export const About = ({ language }: AboutProps) => {
             const { data, error } = await supabase
                 .from('gallery_comments')
                 .insert([
-                    { image_id: selectedImage.id, author_name: newCommentName, content: newComment }
+                    {
+                        image_id: selectedImage.id,
+                        author_name: newCommentName,
+                        author_email: newCommentEmail.trim() || null,
+                        content: newComment
+                    }
                 ])
                 .select();
 
             if (!error && data) {
                 setComments(prev => [...prev, data[0]]);
                 setNewComment("");
+                setNewCommentEmail("");
             }
         } catch (error) {
             console.error(error);
@@ -111,7 +118,11 @@ export const About = ({ language }: AboutProps) => {
             philosophyText: "Klarheit über Komplexität.",
             connect: "Lass uns zusammenarbeiten",
             galleryTitle: "Meine Kunst",
-            gallerySubtitle: "Öl auf Leinwand"
+            gallerySubtitle: "Öl auf Leinwand",
+            likesCountLabel: "Gefällt mir",
+            namePlaceholder: "Ihr Name",
+            emailPlaceholder: "Email (Optional)",
+            commentPlaceholder: "Schreiben Sie einen Kommentar..."
         },
         EN: {
             title: "About Me",
@@ -130,7 +141,11 @@ export const About = ({ language }: AboutProps) => {
             philosophyText: "Clarity over complexity.",
             connect: "Let's work together",
             galleryTitle: "My Art",
-            gallerySubtitle: "Oil on Canvas"
+            gallerySubtitle: "Oil on Canvas",
+            likesCountLabel: "Likes",
+            namePlaceholder: "Your Name",
+            emailPlaceholder: "Email (Optional)",
+            commentPlaceholder: "Add a comment..."
         },
         SR: {
             title: "O meni",
@@ -149,7 +164,11 @@ export const About = ({ language }: AboutProps) => {
             philosophyText: "Jasnoća ispred kompleksnosti.",
             connect: "Hajde da sarađujemo",
             galleryTitle: "Moja Umetnost",
-            gallerySubtitle: "Ulje na platnu"
+            gallerySubtitle: "Ulje na platnu",
+            likesCountLabel: "Sviđanja",
+            namePlaceholder: "Vaše ime",
+            emailPlaceholder: "Email (Opciono)",
+            commentPlaceholder: "Dodaj komentar..."
         }
     };
 
@@ -395,14 +414,6 @@ export const About = ({ language }: AboutProps) => {
                                                             <h3 className="text-xl font-serif text-zinc-500 italic leading-tight">Untitled Artwork</h3>
                                                         )}
                                                     </div>
-                                                    <button
-                                                        onClick={handleLike}
-                                                        disabled={isLiking}
-                                                        className="flex items-center gap-2 px-3 py-1.5 bg-black/40 rounded-full text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all border border-white/5 active:scale-95 group shrink-0"
-                                                    >
-                                                        <Heart size={16} className={`group-hover:fill-red-400 transition-all ${selectedImage.likes_count && selectedImage.likes_count > 0 ? 'fill-red-400 text-red-400' : ''}`} />
-                                                        <span className="text-sm font-bold w-4 text-center">{selectedImage.likes_count || 0}</span>
-                                                    </button>
                                                 </div>
                                                 {selectedImage.description && (
                                                     <div className="space-y-1">
@@ -410,6 +421,18 @@ export const About = ({ language }: AboutProps) => {
                                                         <p className="text-zinc-300 text-sm">{selectedImage.description}</p>
                                                     </div>
                                                 )}
+                                            </div>
+
+                                            {/* Like Button Section - Repositioned above comments */}
+                                            <div className="px-6 py-4 border-b border-zinc-800 shrink-0 bg-zinc-950/50 flex items-center">
+                                                <button
+                                                    onClick={handleLike}
+                                                    disabled={isLiking}
+                                                    className="flex items-center gap-3 px-4 py-2 bg-zinc-900/80 rounded-full text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all border border-white/5 active:scale-95 group shrink-0"
+                                                >
+                                                    <Heart size={20} className={`group-hover:fill-red-400 transition-all ${selectedImage.likes_count && selectedImage.likes_count > 0 ? 'fill-red-400 text-red-400' : ''}`} />
+                                                    <span className="text-sm font-bold">{selectedImage.likes_count || 0} {t.likesCountLabel}</span>
+                                                </button>
                                             </div>
 
                                             {/* Comments List */}
@@ -437,21 +460,30 @@ export const About = ({ language }: AboutProps) => {
                                             {/* Add Comment Form */}
                                             <div className="p-4 border-t border-zinc-800 shrink-0 bg-zinc-950">
                                                 <form onSubmit={handleAddComment} className="flex flex-col gap-3">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Your name"
-                                                        value={newCommentName}
-                                                        onChange={(e) => setNewCommentName(e.target.value)}
-                                                        className="w-full bg-zinc-900 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors"
-                                                        required
-                                                    />
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder={t.namePlaceholder}
+                                                            value={newCommentName}
+                                                            onChange={(e) => setNewCommentName(e.target.value)}
+                                                            className="bg-zinc-900 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                                                            required
+                                                        />
+                                                        <input
+                                                            type="email"
+                                                            placeholder={t.emailPlaceholder}
+                                                            value={newCommentEmail}
+                                                            onChange={(e) => setNewCommentEmail(e.target.value)}
+                                                            className="bg-zinc-900 border border-white/10 rounded px-3 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                                                        />
+                                                    </div>
                                                     <div className="flex gap-2">
                                                         <input
                                                             type="text"
-                                                            placeholder="Add a comment..."
+                                                            placeholder={t.commentPlaceholder}
                                                             value={newComment}
                                                             onChange={(e) => setNewComment(e.target.value)}
-                                                            className="flex-1 bg-zinc-900 border border-white/10 rounded px-3 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                                                            className="flex-1 bg-zinc-900 border border-white/10 rounded px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors"
                                                             required
                                                         />
                                                         <button
