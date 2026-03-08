@@ -2,7 +2,6 @@
 import { usePortfolioData } from "../../context/PortfolioContext";
 import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import { supabase } from "../../lib/supabase";
 
 // Compress image utility
 const compressImage = (file: File, maxWidth = 1920, maxHeight = 1920, quality = 0.8): Promise<string> => {
@@ -242,7 +241,7 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
       </div>
 
       <div className="space-y-6">
-        {localData.map((img, index) => (
+        {Array.isArray(localData) && localData.length > 0 ? localData.map((img, index) => (
           <div key={index} className="flex gap-6 bg-white/5 p-6 rounded-lg border border-white/10 items-start">
             <div
               className="w-1/3 aspect-[4/5] bg-black/50 border border-white/10 overflow-hidden relative group"
@@ -280,7 +279,9 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
               </div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="text-white/50 text-center py-12">No hero images found. Please add them using the Database Sync initial payload first.</div>
+        )}
       </div>
     </div>
   );
