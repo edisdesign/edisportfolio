@@ -341,11 +341,11 @@ export const About = ({ language }: AboutProps) => {
                                         <X size={24} />
                                     </button>
 
-                                    <div className="flex-1 p-8 flex items-center justify-center relative min-h-[50vh]">
+                                    <div className="flex-1 p-4 md:p-8 flex items-center justify-center relative min-h-[50vh] bg-black/50">
                                         <img
                                             src={selectedImage.src}
                                             alt={selectedImage.title}
-                                            className="max-w-full max-h-[80vh] object-contain rounded drop-shadow-2xl"
+                                            className="max-w-full max-h-[70vh] md:max-h-[85vh] w-auto h-auto object-contain rounded drop-shadow-2xl"
                                         />
                                     </div>
 
