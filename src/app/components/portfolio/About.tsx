@@ -287,7 +287,7 @@ export const About = ({ language }: AboutProps) => {
                             </div>
                         </div>
                     </DialogTrigger>
-                    <DialogContent className="max-w-5xl bg-zinc-950/95 border-zinc-800 backdrop-blur-xl min-h-[85vh] max-h-[95vh] overflow-y-auto p-0 gap-0">
+                    <DialogContent className="sm:max-w-5xl bg-zinc-950/95 border-zinc-800 backdrop-blur-xl min-h-[85vh] max-h-[95vh] overflow-y-auto p-0 gap-0">
                         <DialogTitle className="sr-only">{t.galleryTitle}</DialogTitle>
                         <DialogDescription className="sr-only">A collection of oil paintings created by Edis Muminović.</DialogDescription>
 
