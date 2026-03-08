@@ -18,9 +18,14 @@ export default function App() {
   const [showIntro, setShowIntro] = useState(true);
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
 
-  if (isAdmin) {
-    return <AdminDashboard onLogout={() => setIsAdmin(false)} />;
+  // When admin logs in from Footer, both become true
+  if (isAdmin && showAdminPanel) {
+    return <AdminDashboard
+      onLogout={() => { setIsAdmin(false); setShowAdminPanel(false); }}
+      onClose={() => setShowAdminPanel(false)}
+    />;
   }
 
   return (
@@ -68,7 +73,12 @@ export default function App() {
           <UXGame language={language} />
           <About language={language} />
           <Contact language={language} />
-          <Footer language={language} setIsAdmin={setIsAdmin} />
+          <Footer
+            language={language}
+            isAdmin={isAdmin}
+            setIsAdmin={(status) => { setIsAdmin(status); setShowAdminPanel(status); }}
+            onOpenAdmin={() => setShowAdminPanel(true)}
+          />
         </motion.div>
       </div>
     </main>

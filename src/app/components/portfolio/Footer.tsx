@@ -10,10 +10,12 @@ import {
 
 interface FooterProps {
   language: string;
+  isAdmin: boolean;
   setIsAdmin: (isAdmin: boolean) => void;
+  onOpenAdmin: () => void;
 }
 
-export const Footer = ({ language, setIsAdmin }: FooterProps) => {
+export const Footer = ({ language, isAdmin, setIsAdmin, onOpenAdmin }: FooterProps) => {
   const currentYear = new Date().getFullYear();
   const [impressumOpen, setImpressumOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -42,10 +44,10 @@ export const Footer = ({ language, setIsAdmin }: FooterProps) => {
             <p className="flex items-center gap-1">
               &copy; {currentYear} Edis Muminović. All rights reserved
               <span
-                className="cursor-pointer opacity-50 hover:opacity-100 transition-opacity"
-                onClick={() => setAdminModalOpen(true)}
+                className={`cursor-pointer transition-colors font-bold ml-2 ${isAdmin ? 'text-indigo-400 hover:text-indigo-300 uppercase tracking-widest text-xs' : 'opacity-50 hover:opacity-100'}`}
+                onClick={() => isAdmin ? onOpenAdmin() : setAdminModalOpen(true)}
               >
-                ...
+                {isAdmin ? 'Admin Panel' : '...'}
               </span>
             </p>
             <div className="flex items-center gap-6">

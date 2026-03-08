@@ -1,6 +1,6 @@
 ﻿import React, { useState, useRef } from "react";
 import { usePortfolioData } from "../../context/PortfolioContext";
-import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database } from "lucide-react";
+import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database, Globe } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 // Compress image utility
@@ -42,11 +42,38 @@ const compressImage = (file: File, maxWidth = 1920, maxHeight = 1920, quality = 
   });
 };
 
+// Auto-Translate utility using free Google Translate API
+const translateText = async (text: string, sourceLang: string, targetLang: string): Promise<string> => {
+  if (!text || text.trim() === '') return text;
+
+  const langMap: Record<string, string> = {
+    'DE': 'de',
+    'EN': 'en',
+    'SR': 'sr' // Google Translate code for Serbian
+  };
+
+  const sl = langMap[sourceLang] || 'en';
+  const tl = langMap[targetLang] || 'en';
+
+  try {
+    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`);
+    const data = await response.json();
+    if (data && data[0]) {
+      return data[0].map((item: any) => item[0]).join('');
+    }
+    return text;
+  } catch (error) {
+    console.error("Translation error:", error);
+    return text;
+  }
+};
+
 interface AdminDashboardProps {
   onLogout: () => void;
+  onClose: () => void;
 }
 
-export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
+export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
   const { data, updateData } = usePortfolioData();
   const [activeTab, setActiveTab] = useState<'bio' | 'hero' | 'projects' | 'gallery' | 'database'>('bio');
 
@@ -55,13 +82,21 @@ export const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-12 border-b border-white/20 pb-6">
           <h1 className="text-3xl font-bold uppercase tracking-wider">Admin Panel</h1>
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 group text-white/60 hover:text-white transition-colors"
-          >
-            <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="uppercase tracking-widest text-sm">Logout</span>
-          </button>
+          <div className="flex items-center gap-6">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 group text-white/60 hover:text-white transition-colors border border-white/20 px-4 py-1.5 rounded-full"
+            >
+              <span className="uppercase tracking-widest text-xs">View Site</span>
+            </button>
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-2 group text-white/60 hover:text-white transition-colors"
+            >
+              <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="uppercase tracking-widest text-sm">Logout</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -147,6 +182,35 @@ const BioEditor = ({ data, updateData }: { data: any, updateData: (data: any) =>
     setLocalData(newData);
   };
 
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleTranslateAll = async (sourceLang: string) => {
+    setIsTranslating(true);
+    const targetLangs = ['DE', 'EN', 'SR'].filter(l => l !== sourceLang);
+    const sourceData = localData[sourceLang];
+
+    const newData = { ...localData };
+
+    try {
+      for (const targetLang of targetLangs) {
+        const translatedRole = await translateText(sourceData.role, sourceLang, targetLang);
+        const translatedBio = await translateText(sourceData.bio, sourceLang, targetLang);
+
+        newData[targetLang] = {
+          ...newData[targetLang],
+          role: translatedRole,
+          bio: translatedBio
+        };
+      }
+      setLocalData(newData);
+      alert(`Successfully translated from ${sourceLang} to other languages!`);
+    } catch (e) {
+      alert("Translation failed. Check internet connection or try again later.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleSave = () => {
     updateData(localData);
     alert('Biography updated successfully (saved locally)');
@@ -160,8 +224,18 @@ const BioEditor = ({ data, updateData }: { data: any, updateData: (data: any) =>
       </div>
 
       {['DE', 'EN', 'SR'].map((lang) => (
-        <div key={lang} className="bg-white/5 p-6 rounded-lg border border-white/10">
-          <h3 className="text-xl font-bold mb-4">{lang} Settings</h3>
+        <div key={lang} className="bg-white/5 p-6 rounded-lg border border-white/10 relative">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold">{lang} Settings</h3>
+            <button
+              onClick={() => handleTranslateAll(lang)}
+              disabled={isTranslating}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs uppercase tracking-widest transition-colors ${isTranslating ? 'bg-white/10 text-white/40 cursor-not-allowed' : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40'}`}
+            >
+              <Globe size={14} />
+              {isTranslating ? 'Translating...' : `Auto-Translate to others`}
+            </button>
+          </div>
           <div className="space-y-4">
             <div>
               <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Role</label>
@@ -291,6 +365,7 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
 const ProjectsEditor = ({ data, updateData }: { data: any, updateData: (data: any) => void }) => {
   const [localData, setLocalData] = useState(data);
   const [selectedLang, setSelectedLang] = useState('DE');
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Minimal implementation: just raw JSON editor for now to save time, or a basic list.
   // We'll create a basic list editor.
@@ -322,6 +397,54 @@ const ProjectsEditor = ({ data, updateData }: { data: any, updateData: (data: an
     const projects = [...localData[selectedLang]];
     projects.splice(index, 1);
     setLocalData({ ...localData, [selectedLang]: projects });
+  };
+
+  const handleTranslateProject = async (projectIndex: number, sourceLang: string) => {
+    setIsTranslating(true);
+    const targetLangs = ['DE', 'EN', 'SR'].filter(l => l !== sourceLang);
+
+    try {
+      const sourceProj = localData[sourceLang][projectIndex];
+      const newLocalData = { ...localData };
+
+      for (const targetLang of targetLangs) {
+        // Find corresponding project in target language by matching ID
+        const targetIndex = newLocalData[targetLang].findIndex((p: any) => p.id === sourceProj.id);
+
+        if (targetIndex !== -1) {
+          const t = { ...newLocalData[targetLang][targetIndex] };
+
+          t.title = await translateText(sourceProj.title, sourceLang, targetLang);
+          t.category = await translateText(sourceProj.category, sourceLang, targetLang);
+          t.description = await translateText(sourceProj.description, sourceLang, targetLang);
+
+          if (sourceProj.challenge) t.challenge = await translateText(sourceProj.challenge, sourceLang, targetLang);
+          if (sourceProj.solution) t.solution = await translateText(sourceProj.solution, sourceLang, targetLang);
+
+          if (sourceProj.roles && sourceProj.roles.length > 0) {
+            t.roles = [];
+            for (const r of sourceProj.roles) t.roles.push(await translateText(r, sourceLang, targetLang));
+          }
+          if (sourceProj.tools && sourceProj.tools.length > 0) {
+            // Usually tech stack names don't need translation, but user might have typed Serbian/German text
+            t.tools = [];
+            for (const tl of sourceProj.tools) t.tools.push(await translateText(tl, sourceLang, targetLang));
+          }
+
+          // Image and link stay identical
+          t.image = sourceProj.image;
+          t.link = sourceProj.link;
+
+          newLocalData[targetLang][targetIndex] = t;
+        }
+      }
+      setLocalData(newLocalData);
+      alert(`Project successfully translated to other languages!`);
+    } catch (e) {
+      alert("Translation failed. Verify your network and try again.");
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const handleSave = () => {
@@ -384,11 +507,22 @@ const ProjectsEditor = ({ data, updateData }: { data: any, updateData: (data: an
                 type="text"
                 value={project.title}
                 onChange={(e) => handleUpdateProject(index, 'title', e.target.value)}
-                className="bg-transparent text-2xl font-bold text-white focus:outline-none border-b border-transparent focus:border-white w-full max-w-sm"
+                className="bg-transparent text-2xl font-bold text-white focus:outline-none border-b border-transparent focus:border-white w-full max-w-xs md:max-w-sm"
               />
-              <button onClick={() => handleDeleteProject(index)} className="text-red-400 hover:text-red-300 transition-colors p-2 bg-red-500/10 rounded-lg">
-                <Trash size={18} />
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleTranslateProject(index, selectedLang)}
+                  disabled={isTranslating}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors ${isTranslating ? 'bg-white/10 text-white/40 cursor-not-allowed' : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40'}`}
+                  title="Translate this project to all other languages globally"
+                >
+                  <Globe size={16} />
+                  <span className="text-xs uppercase hidden sm:block">Translate</span>
+                </button>
+                <button onClick={() => handleDeleteProject(index)} className="text-red-400 hover:text-red-300 transition-colors p-2 bg-red-500/10 rounded-lg">
+                  <Trash size={18} />
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
