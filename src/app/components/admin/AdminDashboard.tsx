@@ -272,6 +272,16 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
     setLocalData(newData);
   };
 
+  const handleAddImage = () => {
+    setLocalData([...localData, { id: Date.now(), src: 'https://via.placeholder.com/800x1000', label: 'New Image', type: 'image' }]);
+  };
+
+  const handleDeleteImage = (index: number) => {
+    const newData = [...localData];
+    newData.splice(index, 1);
+    setLocalData(newData);
+  };
+
   const handleSave = () => {
     updateData(localData);
     alert('Hero images updated successfully (saved locally)');
@@ -316,7 +326,14 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
 
       <div className="space-y-6">
         {Array.isArray(localData) && localData.length > 0 ? localData.map((img, index) => (
-          <div key={index} className="flex gap-6 bg-white/5 p-6 rounded-lg border border-white/10 items-start">
+          <div key={index} className="flex gap-6 bg-white/5 p-6 rounded-lg border border-white/10 items-start relative">
+            <button
+              onClick={() => handleDeleteImage(index)}
+              className="absolute top-4 right-4 text-zinc-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-full transition-colors"
+              title="Delete Hero Image"
+            >
+              <Trash size={18} />
+            </button>
             <div
               className="w-1/3 aspect-[4/5] bg-black/50 border border-white/10 overflow-hidden relative group"
               onDrop={(e) => handleDrop(index, e)}
@@ -354,8 +371,15 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
             </div>
           </div>
         )) : (
-          <div className="text-white/50 text-center py-12">No hero images found. Please add them using the Database Sync initial payload first.</div>
+          <div className="text-white/50 text-center py-12">No hero images found. You can add a new one below.</div>
         )}
+
+        <button
+          onClick={handleAddImage}
+          className="w-full flex items-center justify-center gap-2 py-6 border border-dashed border-white/20 text-white/60 hover:text-white hover:border-white/60 hover:bg-white/5 transition-all rounded-lg uppercase tracking-widest text-sm font-bold mt-8"
+        >
+          <Plus size={20} /> Add Hero Image
+        </button>
       </div>
     </div>
   );
