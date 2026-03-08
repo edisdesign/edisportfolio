@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { MapPin, ArrowUpRight, Figma, PenTool, Layers, Globe, Star, Palette, Camera, Brush, X, Info, Heart, MessageSquare, Send } from "lucide-react";
+import { MapPin, ArrowUpRight, Figma, PenTool, Layers, Globe, Star, Palette, Camera, Brush, X, Info, Heart, MessageSquare, Send, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogClose } from "../ui/dialog";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { usePortfolioData, GalleryImage } from "../../context/PortfolioContext";
@@ -17,6 +17,23 @@ export const About = ({ language }: AboutProps) => {
     const [newComment, setNewComment] = useState("");
     const [newCommentName, setNewCommentName] = useState("");
     const [isLiking, setIsLiking] = useState(false);
+
+    const currentIndex = selectedImage ? galleryImages.findIndex(img => img.id === selectedImage.id) : -1;
+    const canGoNext = currentIndex !== -1 && currentIndex < galleryImages.length - 1;
+    const canGoPrev = currentIndex !== -1 && currentIndex > 0;
+
+    const handleNext = () => { if (canGoNext) setSelectedImage(galleryImages[currentIndex + 1]); };
+    const handlePrev = () => { if (canGoPrev) setSelectedImage(galleryImages[currentIndex - 1]); };
+
+    const [touchStartX, setTouchStartX] = useState<number | null>(null);
+    const handleTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0].clientX);
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX === null) return;
+        const diff = touchStartX - e.changedTouches[0].clientX;
+        if (diff > 50) handleNext();
+        if (diff < -50) handlePrev();
+        setTouchStartX(null);
+    };
 
     useEffect(() => {
         if (selectedImage?.id) {
@@ -270,7 +287,7 @@ export const About = ({ language }: AboutProps) => {
                             </div>
                         </div>
                     </DialogTrigger>
-                    <DialogContent className="max-w-5xl bg-zinc-950/95 border-zinc-800 backdrop-blur-xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+                    <DialogContent className="max-w-5xl bg-zinc-950/95 border-zinc-800 backdrop-blur-xl min-h-[85vh] max-h-[95vh] overflow-y-auto p-0 gap-0">
                         <DialogTitle className="sr-only">{t.galleryTitle}</DialogTitle>
                         <DialogDescription className="sr-only">A collection of oil paintings created by Edis Muminović.</DialogDescription>
 
@@ -341,12 +358,29 @@ export const About = ({ language }: AboutProps) => {
                                         <X size={24} />
                                     </button>
 
-                                    <div className="flex-1 p-4 md:p-8 flex items-center justify-center relative min-h-[50vh] bg-black/50">
+                                    <div
+                                        className="flex-1 p-4 md:p-8 flex items-center justify-center relative min-h-[50vh] bg-black/50 overflow-hidden group"
+                                        onTouchStart={handleTouchStart}
+                                        onTouchEnd={handleTouchEnd}
+                                    >
                                         <img
                                             src={selectedImage.src}
                                             alt={selectedImage.title}
-                                            className="max-w-full max-h-[70vh] md:max-h-[85vh] w-auto h-auto object-contain rounded drop-shadow-2xl"
+                                            className="w-full h-full object-contain rounded drop-shadow-2xl select-none pointer-events-none"
+                                            draggable={false}
                                         />
+
+                                        {/* Desktop Navigation Chevrons */}
+                                        {canGoPrev && (
+                                            <button onClick={handlePrev} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hidden md:block z-10">
+                                                <ChevronLeft size={32} />
+                                            </button>
+                                        )}
+                                        {canGoNext && (
+                                            <button onClick={handleNext} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hidden md:block z-10">
+                                                <ChevronRight size={32} />
+                                            </button>
+                                        )}
                                     </div>
 
                                     {selectedImage && (
