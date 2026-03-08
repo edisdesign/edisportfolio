@@ -12,6 +12,8 @@ interface AboutProps {
 
 export const About = ({ language }: AboutProps) => {
     const { data } = usePortfolioData();
+    const galleryImages = data.galleryImages || [];
+
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState("");
@@ -152,8 +154,6 @@ export const About = ({ language }: AboutProps) => {
     };
 
     const t = translations[language as keyof typeof translations];
-
-    const galleryImages = data.galleryImages || [];
 
     const gridItems = [
         // 1. BIO CARD (Large)
