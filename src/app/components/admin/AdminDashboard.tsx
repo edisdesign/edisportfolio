@@ -2,6 +2,46 @@
 import { usePortfolioData } from "../../context/PortfolioContext";
 import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { supabase } from "../../lib/supabase";
+
+// Compress image utility
+const compressImage = (file: File, maxWidth = 1920, maxHeight = 1920, quality = 0.8): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -164,26 +204,29 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
     alert('Hero images updated successfully (saved locally)');
   };
 
-  const handleFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleUpdateImage(index, 'src', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImage(file);
+        handleUpdateImage(index, 'src', compressedBase64);
+      } catch (error) {
+        console.error("Image compression failed", error);
+        alert("Błąd podczas wgrywania zdjęcia. Spróbuj mniejsze.");
+      }
     }
   };
 
-  const handleDrop = (index: number, e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (index: number, e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleUpdateImage(index, 'src', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImage(file);
+        handleUpdateImage(index, 'src', compressedBase64);
+      } catch (error) {
+        console.error("Image compression failed", error);
+      }
     }
   };
 
@@ -285,26 +328,28 @@ const ProjectsEditor = ({ data, updateData }: { data: any, updateData: (data: an
     alert('Projects updated successfully (saved locally)');
   };
 
-  const handleFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleUpdateProject(index, 'image', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImage(file);
+        handleUpdateProject(index, 'image', compressedBase64);
+      } catch (error) {
+        console.error("Image compression failed", error);
+      }
     }
   };
 
-  const handleDrop = (index: number, e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (index: number, e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleUpdateProject(index, 'image', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImage(file);
+        handleUpdateProject(index, 'image', compressedBase64);
+      } catch (error) {
+        console.error("Image compression failed", error);
+      }
     }
   };
 
@@ -473,26 +518,28 @@ const GalleryEditor = ({ data, updateData }: { data: any[], updateData: (data: a
     alert('Gallery updated successfully (saved locally)');
   };
 
-  const handleFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleUpdateImage(index, 'src', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImage(file);
+        handleUpdateImage(index, 'src', compressedBase64);
+      } catch (error) {
+        console.error("Image compression failed", error);
+      }
     }
   };
 
-  const handleDrop = (index: number, e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (index: number, e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleUpdateImage(index, 'src', reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImage(file);
+        handleUpdateImage(index, 'src', compressedBase64);
+      } catch (error) {
+        console.error("Image compression failed", error);
+      }
     }
   };
 
