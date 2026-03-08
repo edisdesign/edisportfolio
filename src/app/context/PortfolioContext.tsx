@@ -163,8 +163,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                             });
                         });
                     });
+
                     if (allProjects.length > 0) {
-                        await supabase.from('projects').insert(allProjects);
+                        // Insert sequentially to avoid hitting payload sizing limits on Vercel
+                        for (const p of allProjects) {
+                            await supabase.from('projects').insert([p]);
+                        }
                     }
 
                     // 3. Gallery
@@ -176,7 +180,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         sort_order: index
                     }));
                     if (galleryPayload.length > 0) {
-                        await supabase.from('gallery_images').insert(galleryPayload);
+                        // Insert sequentially to avoid hitting payload sizing limits
+                        for (const gal of galleryPayload) {
+                            await supabase.from('gallery_images').insert([gal]);
+                        }
                     }
                 } catch (error) {
                     console.error("Failed to sync to Supabase", error);

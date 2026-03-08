@@ -3,8 +3,8 @@ import { usePortfolioData } from "../../context/PortfolioContext";
 import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database, Globe } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
-// Compress image utility
-const compressImage = (file: File, maxWidth = 1920, maxHeight = 1920, quality = 0.8): Promise<string> => {
+// Compress image utility - AGGRESSIVE compression for Base64 storage
+const compressImage = (file: File, maxWidth = 1024, maxHeight = 1024, quality = 0.6): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -815,7 +815,7 @@ const DatabaseMigration = ({ data }: { data: any }) => {
       const { error: projError } = await supabase.from('projects').insert(allProjects);
       if (projError) throw new Error(`Projects Error: ${projError.message}`);
 
-      setStatus('Uploading gallery images...');
+      setStatus('Uploading gallery images in smaller batches to avoid payload limits...');
       await supabase.from('gallery_images').delete().neq('src', 'none');
 
       const galleryPayload = data.galleryImages.map((img: any, index: number) => ({
@@ -825,13 +825,16 @@ const DatabaseMigration = ({ data }: { data: any }) => {
         sort_order: index
       }));
 
-      const { error: galError } = await supabase.from('gallery_images').insert(galleryPayload);
-      if (galError) throw new Error(`Gallery Error: ${galError.message}`);
+      // Insert gallery images one by one or in small batches to avoid 413 Payload Too Large
+      for (const galItem of galleryPayload) {
+        const { error: galError } = await supabase.from('gallery_images').insert([galItem]);
+        if (galError) throw new Error(`Gallery Error: ${galError.message}`);
+      }
 
-      setStatus('Migration complete! All local data is now in Supabase. You can now tell the assistant to switch reading the site from Supabase instead of LocalStorage.');
+      setStatus('Migration complete! Refresh the page to see changes. If images are missing, they were too large even after compression.');
     } catch (error: any) {
       console.error(error);
-      setStatus(`Error during migration: ${error.message}`);
+      setStatus(`Error during migration: ${error.message}. Try reducing image sizes.`);
     } finally {
       setIsMigrating(false);
     }
