@@ -32,7 +32,7 @@ export const Experience = ({ language }: ExperienceProps) => {
   if (timelineData.length === 0) return null;
 
   return (
-    <section id="experience" className="py-24 bg-zinc-950 relative overflow-hidden">
+    <section id="experience" className="py-24 bg-zinc-950 relative">
       <div className="container mx-auto px-6 relative z-10" ref={containerRef}>
         <div className="text-center mb-16">
           <motion.h2

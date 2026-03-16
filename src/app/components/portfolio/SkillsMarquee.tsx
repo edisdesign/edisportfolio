@@ -26,55 +26,33 @@ export const SkillsMarquee = ({ language }: SkillsMarqueeProps) => {
         </p>
       </div>
 
-      <div className="relative flex flex-col gap-8">
-        {/* First Row - Moving Left */}
-        <div className="flex overflow-hidden relative z-10">
+      <div className="relative flex flex-col items-center">
+        {/* Single Row - Moving Left */}
+        <div className="flex overflow-hidden relative z-10 w-full py-4">
           <motion.div
-            className="flex gap-8 whitespace-nowrap"
-            animate={{ x: [0, -1035] }} // Adjust based on content width roughly
+            className="flex gap-12 whitespace-nowrap"
+            animate={{ x: [0, -1500] }} 
             transition={{
               repeat: Infinity,
               ease: "linear",
-              duration: 20,
+              duration: 30,
             }}
           >
-            {[...skills, ...skills, ...skills].map((skill, index) => (
+            {[...skills, ...skills, ...skills, ...skills].map((skill, index) => (
               <div
-                key={`row1-${index}`}
-                className="text-4xl md:text-6xl font-bold text-zinc-800 hover:text-indigo-500 transition-colors duration-300 cursor-default"
+                key={`skill-${index}`}
+                className="text-5xl md:text-7xl font-bold text-zinc-800 hover:text-indigo-500 transition-colors duration-300 cursor-default flex items-center gap-12"
               >
-                {skill}
-              </div>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* Second Row - Moving Right */}
-        <div className="flex overflow-hidden relative z-10">
-          <motion.div
-            className="flex gap-8 whitespace-nowrap"
-            animate={{ x: [-1035, 0] }}
-            transition={{
-              repeat: Infinity,
-              ease: "linear",
-              duration: 25,
-            }}
-          >
-             {[...skills, ...skills, ...skills].reverse().map((skill, index) => (
-              <div
-                key={`row2-${index}`}
-                className="text-4xl md:text-6xl font-bold text-zinc-800/50 hover:text-indigo-400/80 transition-colors duration-300 cursor-default"
-                style={{ WebkitTextStroke: "1px rgba(161, 161, 170, 0.2)" }}
-              >
-                {skill}
+                <span>{skill}</span>
+                <span className="w-2 h-2 rounded-full bg-indigo-500/30" />
               </div>
             ))}
           </motion.div>
         </div>
 
         {/* Gradient Overlays for smooth fade effect */}
-        <div className="absolute inset-y-0 left-0 w-24 md:w-48 bg-gradient-to-r from-zinc-950 to-transparent z-20 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-24 md:w-48 bg-gradient-to-l from-zinc-950 to-transparent z-20 pointer-events-none" />
+        <div className="absolute inset-y-0 left-0 w-24 md:w-64 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-transparent z-20 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-24 md:w-64 bg-gradient-to-l from-zinc-950 via-zinc-950/80 to-transparent z-20 pointer-events-none" />
       </div>
     </section>
   );

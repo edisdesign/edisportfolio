@@ -85,7 +85,7 @@ export const Process = ({ language }: ProcessProps) => {
   const t = translations[language as keyof typeof translations];
 
   return (
-    <section id="process" className="py-24 bg-zinc-950 relative overflow-hidden">
+    <section id="process" className="py-24 bg-zinc-950 relative">
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           <motion.h2
