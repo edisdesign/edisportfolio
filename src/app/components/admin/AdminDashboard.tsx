@@ -853,6 +853,14 @@ const DatabaseMigration = ({ data }: { data: any }) => {
         });
       }
 
+      setStatus('Uploading blog posts...');
+      const existingPosts = await pb.collection('blog_posts').getFullList();
+      for (const p of existingPosts) await pb.collection('blog_posts').delete(p.id);
+
+      for (const post of data.blogPosts) {
+        await pb.collection('blog_posts').create(post);
+      }
+
       setStatus('Migration complete! Refresh to see changes on PocketBase.');
     } catch (error: any) {
       console.error(error);
@@ -872,10 +880,10 @@ const DatabaseMigration = ({ data }: { data: any }) => {
         <div>
           <h3 className="text-xl font-bold text-white mb-2">Migrate Local to Cloud</h3>
           <p className="text-indigo-200/70 text-sm leading-relaxed">
-            This action will take all the changes you've made in your browser so far (Projects, Biography, Gallery, Hero Images) and forcefully push them to your connected Supabase database.
+            This action will take all the changes you've made in your browser so far (Blog, Projects, Biography, Gallery, Hero Images) and forcefully push them to your connected PocketBase cloud database.
           </p>
           <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-sm">
-            <strong>Warning:</strong> Ensure you have executed the `supabase_setup.sql` script in your Supabase SQL Editor before running this, otherwise the tables won't exist. This will overwrite any existing data in the cloud tables.
+            <strong>Warning:</strong> Ensure you have imported the `pocketbase_schema.json` file in your PocketBase Settings -> Import Collections before running this. This will overwrite existing data in the cloud.
           </div>
         </div>
 
