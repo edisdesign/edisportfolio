@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Navbar } from "./components/portfolio/Navbar";
 import { Hero } from "./components/portfolio/Hero";
+import { Process } from "./components/portfolio/Process";
+import { Experience } from "./components/portfolio/Experience";
 import { SkillsMarquee } from "./components/portfolio/SkillsMarquee";
 import { Projects } from "./components/portfolio/Projects";
 import { UXGame } from "./components/portfolio/UXGame";
@@ -70,6 +72,8 @@ export default function App() {
           transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
         >
           <Hero language={language} />
+          <Process language={language} />
+          <Experience language={language} />
           <SkillsMarquee language={language} />
           <Projects language={language} onSelectProject={setSelectedProject} />
           <UXGame language={language} />

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { usePortfolioData } from "../../context/PortfolioContext";
-import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database, Globe } from "lucide-react";
+import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database, Globe, Clock } from "lucide-react";
 import pb from "../../lib/pocketbase";
 
 // Compress image utility - AGGRESSIVE compression for Base64 storage
@@ -75,7 +75,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
   const { data, updateData } = usePortfolioData();
-  const [activeTab, setActiveTab] = useState<'blog' | 'bio' | 'hero' | 'projects' | 'gallery'>('blog');
+  const [activeTab, setActiveTab] = useState<'blog' | 'bio' | 'hero' | 'projects' | 'gallery' | 'experience'>('blog');
 
   return (
     <div className="min-h-screen bg-black text-white p-8 font-mono">
@@ -138,6 +138,13 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
                 <ImageIcon size={18} />
                 <span className="uppercase tracking-wider text-sm">Gallery</span>
               </button>
+              <button
+                onClick={() => setActiveTab('experience')}
+                className={`flex items-center gap-3 p-3 rounded-lg transition-colors border ${activeTab === 'experience' ? 'bg-white text-black border-white' : 'hover:bg-white/10 border-transparent text-white/70'}`}
+              >
+                <Clock size={18} />
+                <span className="uppercase tracking-wider text-sm">Experience</span>
+              </button>
             </nav>
           </div>
 
@@ -147,7 +154,11 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
               <BlogEditor data={data.blogPosts} updateData={(newPosts) => updateData({ blogPosts: newPosts })} />
             )}
             {activeTab === 'bio' && (
-              <BioEditor data={data.bioData} updateData={(newBio) => updateData({ bioData: newBio })} />
+              <BioEditor 
+                bioData={data.bioData} 
+                statusData={data.statusData} 
+                updateData={(newBio, newStatus) => updateData({ bioData: newBio, statusData: newStatus })} 
+              />
             )}
             {activeTab === 'hero' && (
               <HeroImagesEditor data={data.heroImages} updateData={(newImages) => updateData({ heroImages: newImages })} />
@@ -158,6 +169,9 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
             {activeTab === 'gallery' && (
               <GalleryEditor data={data.galleryImages} updateData={(newGallery) => updateData({ galleryImages: newGallery })} />
             )}
+            {activeTab === 'experience' && (
+              <ExperienceEditor data={data.experienceData} updateData={(newExp) => updateData({ experienceData: newExp })} />
+            )}
           </div>
         </div>
       </div>
@@ -167,19 +181,26 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
 
 // --- Sub-components for Editors ---
 
-// Bio Editor
-const BioEditor = ({ data, updateData }: { data: any, updateData: (data: any) => void }) => {
-  const [localData, setLocalData] = useState(data);
+// Bio & Status Editor
+const BioEditor = ({ bioData, statusData, updateData }: { bioData: any, statusData: any, updateData: (b: any, s: any) => void }) => {
+  const [localBio, setLocalBio] = useState(bioData);
+  const [localStatus, setLocalStatus] = useState(statusData);
 
-  const handleChange = (lang: string, field: string, value: string) => {
-    const newData = {
-      ...localData,
+  const handleBioChange = (lang: string, field: string, value: string) => {
+    setLocalBio({
+      ...localBio,
       [lang]: {
-        ...localData[lang],
+        ...localBio[lang],
         [field]: value
       }
-    };
-    setLocalData(newData);
+    });
+  };
+
+  const handleStatusChange = (lang: string, value: string) => {
+    setLocalStatus({
+      ...localStatus,
+      [lang]: value
+    });
   };
 
   const [isTranslating, setIsTranslating] = useState(false);
@@ -187,22 +208,23 @@ const BioEditor = ({ data, updateData }: { data: any, updateData: (data: any) =>
   const handleTranslateAll = async (sourceLang: string) => {
     setIsTranslating(true);
     const targetLangs = ['DE', 'EN', 'SR'].filter(l => l !== sourceLang);
-    const sourceData = localData[sourceLang];
+    const sourceBio = localBio[sourceLang];
+    const sourceStatus = localStatus[sourceLang];
 
-    const newData = { ...localData };
+    const newBio = { ...localBio };
+    const newStatus = { ...localStatus };
 
     try {
       for (const targetLang of targetLangs) {
-        const translatedRole = await translateText(sourceData.role, sourceLang, targetLang);
-        const translatedBio = await translateText(sourceData.bio, sourceLang, targetLang);
-
-        newData[targetLang] = {
-          ...newData[targetLang],
-          role: translatedRole,
-          bio: translatedBio
+        newBio[targetLang] = {
+          ...newBio[targetLang],
+          role: await translateText(sourceBio.role, sourceLang, targetLang),
+          bio: await translateText(sourceBio.bio, sourceLang, targetLang)
         };
+        newStatus[targetLang] = await translateText(sourceStatus, sourceLang, targetLang);
       }
-      setLocalData(newData);
+      setLocalBio(newBio);
+      setLocalStatus(newStatus);
       alert(`Successfully translated from ${sourceLang} to other languages!`);
     } catch (e) {
       alert("Translation failed. Check internet connection or try again later.");
@@ -212,8 +234,8 @@ const BioEditor = ({ data, updateData }: { data: any, updateData: (data: any) =>
   };
 
   const handleSave = () => {
-    updateData(localData);
-    alert('Biography is syncing to PocketBase...');
+    updateData(localBio, localStatus);
+    alert('Biography & Status is syncing to PocketBase...');
   };
 
   return (
@@ -238,11 +260,21 @@ const BioEditor = ({ data, updateData }: { data: any, updateData: (data: any) =>
           </div>
           <div className="space-y-4">
             <div>
+              <label className="block text-sm text-indigo-400 mb-2 uppercase tracking-wider">Status / Currently Working On</label>
+              <input
+                type="text"
+                value={localStatus[lang]}
+                onChange={(e) => handleStatusChange(lang, e.target.value)}
+                placeholder="e.g. Currently crafting a new Design System..."
+                className="w-full bg-black/50 border border-white/20 rounded p-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
+            <div>
               <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Role</label>
               <input
                 type="text"
-                value={localData[lang].role}
-                onChange={(e) => handleChange(lang, 'role', e.target.value)}
+                value={localBio[lang].role}
+                onChange={(e) => handleBioChange(lang, 'role', e.target.value)}
                 className="w-full bg-black/50 border border-white/20 rounded p-3 text-white focus:outline-none focus:border-white transition-colors"
               />
             </div>
@@ -250,8 +282,8 @@ const BioEditor = ({ data, updateData }: { data: any, updateData: (data: any) =>
               <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Bio Text</label>
               <textarea
                 rows={4}
-                value={localData[lang].bio}
-                onChange={(e) => handleChange(lang, 'bio', e.target.value)}
+                value={localBio[lang].bio}
+                onChange={(e) => handleBioChange(lang, 'bio', e.target.value)}
                 className="w-full bg-black/50 border border-white/20 rounded p-3 text-white focus:outline-none focus:border-white transition-colors leading-relaxed"
               />
             </div>
@@ -379,6 +411,117 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
           className="w-full flex items-center justify-center gap-2 py-6 border border-dashed border-white/20 text-white/60 hover:text-white hover:border-white/60 hover:bg-white/5 transition-all rounded-lg uppercase tracking-widest text-sm font-bold mt-8"
         >
           <Plus size={20} /> Add Hero Image
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Experience Editor
+const ExperienceEditor = ({ data, updateData }: { data: any, updateData: (data: any) => void }) => {
+  const [localData, setLocalData] = useState(data);
+  const [activeLang, setActiveLang] = useState('DE');
+
+  const handleUpdateItem = (lang: string, index: number, field: string, value: string) => {
+    const newData = { ...localData };
+    newData[lang] = [...newData[lang]];
+    newData[lang][index] = { ...newData[lang][index], [field]: value };
+    setLocalData(newData);
+  };
+
+  const handleAddItem = (lang: string) => {
+    const newData = { ...localData };
+    newData[lang] = [...(newData[lang] || []), { id: Date.now().toString(), year: "2024", title: "New Role", company: "Company", description: "Role description" }];
+    setLocalData(newData);
+  };
+
+  const handleDeleteItem = (lang: string, index: number) => {
+    const newData = { ...localData };
+    newData[lang] = [...newData[lang]];
+    newData[lang].splice(index, 1);
+    setLocalData(newData);
+  };
+
+  const handleSave = () => {
+    updateData(localData);
+    alert('Experience Timeline is syncing to PocketBase...');
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-center border-b border-white/20 pb-4">
+        <h2 className="text-2xl font-bold uppercase tracking-wider">Edit Experience Timeline</h2>
+        <button onClick={handleSave} className="bg-white text-black px-6 py-2 uppercase tracking-widest text-xs hover:bg-white/80 transition-colors">Save Changes</button>
+      </div>
+
+      <div className="flex gap-4 mb-6">
+        {['DE', 'EN', 'SR'].map(lang => (
+          <button
+            key={lang}
+            onClick={() => setActiveLang(lang)}
+            className={`px-4 py-2 rounded font-bold transition-colors ${activeLang === lang ? 'bg-indigo-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/20'}`}
+          >
+            {lang}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-6">
+        {(localData[activeLang] || []).map((item: any, index: number) => (
+          <div key={item.id || index} className="flex gap-6 bg-white/5 p-6 rounded-lg border border-white/10 items-start relative mt-4">
+            <button
+              onClick={() => handleDeleteItem(activeLang, index)}
+              className="absolute top-4 right-4 text-zinc-500 hover:text-red-400 p-2 hover:bg-white/5 rounded-full transition-colors"
+            >
+              <Trash size={18} />
+            </button>
+            <div className="grid grid-cols-2 gap-4 w-full pr-10">
+              <div className="col-span-1">
+                <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Year</label>
+                <input
+                  type="text"
+                  value={item.year}
+                  onChange={(e) => handleUpdateItem(activeLang, index, 'year', e.target.value)}
+                  className="w-full bg-black border border-white/20 rounded p-3 text-white focus:outline-none focus:border-white transition-colors"
+                />
+              </div>
+              <div className="col-span-1">
+                <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Company</label>
+                <input
+                  type="text"
+                  value={item.company}
+                  onChange={(e) => handleUpdateItem(activeLang, index, 'company', e.target.value)}
+                  className="w-full bg-black border border-white/20 rounded p-3 text-white focus:outline-none focus:border-white transition-colors"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Title / Role</label>
+                <input
+                  type="text"
+                  value={item.title}
+                  onChange={(e) => handleUpdateItem(activeLang, index, 'title', e.target.value)}
+                  className="w-full bg-black border border-white/20 rounded p-3 text-white focus:outline-none focus:border-white transition-colors"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Description</label>
+                <textarea
+                  rows={3}
+                  value={item.description}
+                  onChange={(e) => handleUpdateItem(activeLang, index, 'description', e.target.value)}
+                  className="w-full bg-black border border-white/20 rounded p-3 text-white focus:outline-none focus:border-white transition-colors leading-relaxed"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <button
+          onClick={() => handleAddItem(activeLang)}
+          className="w-full py-4 border-2 border-dashed border-white/20 rounded-lg text-white/60 hover:text-white hover:border-white/40 transition-colors flex items-center justify-center gap-2 uppercase tracking-widest text-sm"
+        >
+          <Plus size={18} />
+          Add Timeline Event
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { defaultHeroImages, defaultProjectsData, defaultGalleryImages, defaultBioData } from "../data/defaultData";
+import { defaultHeroImages, defaultProjectsData, defaultGalleryImages, defaultBioData, defaultStatusData, defaultExperienceData } from "../data/defaultData";
 
 export interface Project {
     id: string | number;
@@ -55,6 +55,16 @@ export interface PortfolioData {
         EN: { role: string; bio: string };
         SR: { role: string; bio: string };
     };
+    statusData: {
+        DE: string;
+        EN: string;
+        SR: string;
+    };
+    experienceData: {
+        DE: any[];
+        EN: any[];
+        SR: any[];
+    };
     blogPosts: BlogPost[];
 }
 
@@ -68,6 +78,8 @@ const defaultData: PortfolioData = {
     projectsData: defaultProjectsData,
     galleryImages: defaultGalleryImages,
     bioData: defaultBioData,
+    statusData: defaultStatusData,
+    experienceData: defaultExperienceData,
     blogPosts: [],
 };
 
@@ -90,12 +102,20 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 const projects = await pb.collection('projects').getFullList({ sort: 'sort_order' }).catch(() => []);
                 const gallery = await pb.collection('gallery_images').getFullList({ sort: 'sort_order' }).catch(() => []);
                 const blog = await pb.collection('blog_posts').getFullList({ sort: '-date' }).catch(() => []);
+                const timeline = await pb.collection('experience_timeline').getFullList({ sort: 'sort_order' }).catch(() => []);
 
-                if (content || projects.length > 0 || gallery.length > 0 || blog.length > 0) {
+                if (content || projects.length > 0 || gallery.length > 0 || blog.length > 0 || timeline.length > 0) {
                     const formattedProjects = { DE: [], EN: [], SR: [] } as any;
                     projects.forEach((p: any) => {
                         if (formattedProjects[p.language]) {
                             formattedProjects[p.language].push(p);
+                        }
+                    });
+
+                    const formattedTimeline = { DE: [], EN: [], SR: [] } as any;
+                    timeline.forEach((t: any) => {
+                        if (formattedTimeline[t.language]) {
+                            formattedTimeline[t.language].push(t);
                         }
                     });
 
@@ -108,6 +128,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                             EN: content?.bio_en || { role: "", bio: "" },
                             SR: content?.bio_sr || { role: "", bio: "" }
                         },
+                        statusData: {
+                            DE: content?.status_de || "",
+                            EN: content?.status_en || "",
+                            SR: content?.status_sr || ""
+                        },
+                        experienceData: formattedTimeline.DE.length || formattedTimeline.EN.length || formattedTimeline.SR.length ? formattedTimeline : defaultExperienceData,
                         blogPosts: blog as unknown as BlogPost[] || []
                     });
                 } else {
@@ -131,13 +157,16 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
             const syncToPocketBase = async () => {
                 try {
-                    // 1. Content (Bio & Hero)
-                    if (newData.bioData || newData.heroImages) {
+                    // 1. Content (Bio, Hero, Status)
+                    if (newData.bioData || newData.heroImages || newData.statusData) {
                         const contentPayload = {
                             hero_images: updated.heroImages,
                             bio_de: updated.bioData.DE,
                             bio_en: updated.bioData.EN,
-                            bio_sr: updated.bioData.SR
+                            bio_sr: updated.bioData.SR,
+                            status_de: updated.statusData.DE,
+                            status_en: updated.statusData.EN,
+                            status_sr: updated.statusData.SR
                         };
                         
                         try {
@@ -220,6 +249,35 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                                  const { id, ...createPayload } = post;
                                  await pb.collection('blog_posts').create(createPayload).catch(() => {});
                              }
+                        }
+                    }
+
+                    // 5. Experience Timeline
+                    if (newData.experienceData) {
+                        const existingTimeline = await pb.collection('experience_timeline').getFullList().catch(() => []);
+                        
+                        const incomingTimeline = ['DE', 'EN', 'SR'].flatMap(lang => 
+                            updated.experienceData[lang as any].map((t: any) => ({ ...t, language: lang }))
+                        );
+                        const incomingIds = incomingTimeline.map(t => t.id);
+
+                        for (const t of existingTimeline) {
+                            if (!incomingIds.includes(t.id)) {
+                                await pb.collection('experience_timeline').delete(t.id).catch(() => {});
+                            }
+                        }
+
+                        for (const lang of ['DE', 'EN', 'SR']) {
+                            for (const [index, item] of updated.experienceData[lang as any].entries()) {
+                                const payload = { ...item, language: lang, sort_order: index };
+                                const exists = existingTimeline.some(et => et.id === item.id);
+                                if (exists) {
+                                    await pb.collection('experience_timeline').update(item.id, payload).catch(() => {});
+                                } else {
+                                    const { id, ...createPayload } = payload;
+                                    await pb.collection('experience_timeline').create(createPayload).catch(() => {});
+                                }
+                            }
                         }
                     }
 

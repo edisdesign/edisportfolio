@@ -208,3 +208,27 @@ export const defaultBioData = {
         bio: "Kreiram digitalne proizvode koji ne samo da izgledaju dobro, već i funkcionišu savršeno. Kada ne dizajniram, bavim se fotografijom i slikarstvom. antigravity, u dusi dizajner u zivotu poslodavac, hobi saradnik ai za development.",
     },
 };
+
+export const defaultStatusData = {
+    DE: "Aktuell am Redesign des Design Systems für Convaix",
+    EN: "Currently redesigning the Design System for Convaix",
+    SR: "Trenutno redizajniram Design System za Convaix"
+};
+
+export const defaultExperienceData = {
+    DE: [
+        { id: "1", year: "2024", title: "Freelance Senior Designer", company: "Self-Employed", description: "Design Systems & High-Fidelity UI." },
+        { id: "2", year: "2022", title: "Lead UX/UI Designer", company: "Murphy's Agency", description: "Complex animations and site architectures." },
+        { id: "3", year: "2019", title: "UI Designer", company: "Creative Studio", description: "Concept development and prototyping." }
+    ],
+    EN: [
+        { id: "1", year: "2024", title: "Freelance Senior Designer", company: "Self-Employed", description: "Design Systems & High-Fidelity UI." },
+        { id: "2", year: "2022", title: "Lead UX/UI Designer", company: "Murphy's Agency", description: "Complex animations and site architectures." },
+        { id: "3", year: "2019", title: "UI Designer", company: "Creative Studio", description: "Concept development and prototyping." }
+    ],
+    SR: [
+        { id: "1", year: "2024", title: "Freelance Senior Dizajner", company: "Samozaposlen", description: "Dizajn sistemi i High-Fidelity UI." },
+        { id: "2", year: "2022", title: "Lead UX/UI Dizajner", company: "Murphy's Agencija", description: "Kompleksne animacije i arhitektura sajtova." },
+        { id: "3", year: "2019", title: "UI Dizajner", company: "Kreativni Studio", description: "Razvoj koncepata i prototipiranje." }
+    ]
+};

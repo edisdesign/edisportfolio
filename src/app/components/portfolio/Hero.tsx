@@ -134,7 +134,7 @@ export const Hero = ({ language }: HeroProps) => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34d399] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10b981]"></span>
               </span>
-              {t.status}
+              {data.statusData?.[language as 'DE' | 'EN' | 'SR'] || t.status}
             </motion.div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white tracking-tighter mb-6 leading-[1.1]">
