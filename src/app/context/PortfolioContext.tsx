@@ -99,6 +99,7 @@ import pb from "../lib/pocketbase";
 // Helper: Build PocketBase file URL
 const getFileUrl = (record: any, filename: string): string => {
     if (!filename) return "";
+    if (filename.startsWith('http')) return filename;
     return pb.files.getURL(record, filename);
 };
 
@@ -112,19 +113,19 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             const content = await pb.collection('portfolio_content').getList(1, 1).then(res => res.items[0]).catch(() => null);
 
             // 2. Hero Images — now a dedicated collection with file uploads
-            const heroRecords = await pb.collection('hero_images').getFullList({ sort: 'sort_order' }).catch(() => []);
+            const heroRecords = await pb.collection('hero_images').getList(1, 100, { sort: 'sort_order' }).then(res => res.items).catch(() => []);
 
             // 3. Projects
-            const projects = await pb.collection('projects').getFullList({ sort: 'sort_order' }).catch(() => []);
+            const projects = await pb.collection('projects').getList(1, 100, { sort: 'sort_order' }).then(res => res.items).catch(() => []);
 
             // 4. Gallery
-            const gallery = await pb.collection('gallery_images').getFullList({ sort: 'sort_order' }).catch(() => []);
+            const gallery = await pb.collection('gallery_images').getList(1, 200, { sort: 'sort_order' }).then(res => res.items).catch(() => []);
 
             // 5. Blog
-            const blog = await pb.collection('blog_posts').getFullList({ sort: '-date' }).catch(() => []);
+            const blog = await pb.collection('blog_posts').getList(1, 100, { sort: '-date' }).then(res => res.items).catch(() => []);
 
             // 6. Experience Timeline
-            const timeline = await pb.collection('experience_timeline').getFullList({ sort: 'sort_order' }).catch(() => []);
+            const timeline = await pb.collection('experience_timeline').getList(1, 100, { sort: 'sort_order' }).then(res => res.items).catch(() => []);
 
             const hasData = content || heroRecords.length > 0 || projects.length > 0 || gallery.length > 0 || blog.length > 0 || timeline.length > 0;
 

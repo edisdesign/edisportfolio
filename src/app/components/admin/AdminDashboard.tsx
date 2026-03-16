@@ -32,6 +32,7 @@ const translateText = async (text: string, sourceLang: string, targetLang: strin
 // Helper: get file URL from PocketBase record
 const getFileUrl = (record: any, filename: string): string => {
   if (!filename) return "";
+  if (filename && typeof filename === 'string' && filename.startsWith('http')) return filename;
   return pb.files.getURL(record, filename);
 };
 
