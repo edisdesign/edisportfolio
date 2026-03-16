@@ -4,7 +4,7 @@ import { MapPin, ArrowUpRight, Figma, PenTool, Layers, Globe, Star, Palette, Cam
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription, DialogClose } from "../ui/dialog";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { usePortfolioData, GalleryImage } from "../../context/PortfolioContext";
-import { supabase } from "../../lib/supabase";
+import pb from "../../lib/pocketbase";
 
 interface AboutProps {
     language: string;
@@ -41,11 +41,10 @@ export const About = ({ language }: AboutProps) => {
     useEffect(() => {
         if (selectedImage?.id) {
             const fetchComments = async () => {
-                const { data } = await supabase
-                    .from('gallery_comments')
-                    .select('*')
-                    .eq('image_id', selectedImage.id)
-                    .order('created_at', { ascending: true });
+                const data = await pb.collection('gallery_comments').getFullList({
+                    filter: `image_id="${selectedImage.id}"`,
+                    sort: 'created'
+                }).catch(() => []);
                 if (data) setComments(data);
             };
             fetchComments();
@@ -60,12 +59,11 @@ export const About = ({ language }: AboutProps) => {
         setIsLiking(true);
         try {
             const newLikesCount = (selectedImage.likes_count || 0) + 1;
-            const { error } = await supabase
-                .from('gallery_images')
-                .update({ likes_count: newLikesCount })
-                .eq('id', selectedImage.id);
+            const updated = await pb.collection('gallery_images').update(selectedImage.id, {
+                likes_count: newLikesCount
+            }).catch(() => null);
 
-            if (!error) {
+            if (updated) {
                 setSelectedImage(prev => prev ? { ...prev, likes_count: newLikesCount } : null);
             }
         } finally {
@@ -78,20 +76,15 @@ export const About = ({ language }: AboutProps) => {
         if (!selectedImage || !selectedImage.id || !newComment.trim() || !newCommentName.trim()) return;
 
         try {
-            const { data, error } = await supabase
-                .from('gallery_comments')
-                .insert([
-                    {
-                        image_id: selectedImage.id,
-                        author_name: newCommentName,
-                        author_email: newCommentEmail.trim() || null,
-                        content: newComment
-                    }
-                ])
-                .select();
+            const data = await pb.collection('gallery_comments').create({
+                image_id: selectedImage.id,
+                author_name: newCommentName,
+                author_email: newCommentEmail.trim() || null,
+                content: newComment
+            });
 
-            if (!error && data) {
-                setComments(prev => [...prev, data[0]]);
+            if (data) {
+                setComments(prev => [...prev, data]);
                 setNewComment("");
                 setNewCommentEmail("");
             }

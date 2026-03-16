@@ -151,15 +151,30 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     // 2. Projects
                     if (newData.projectsData) {
                         const existingProjects = await pb.collection('projects').getFullList().catch(() => []);
-                        for (const p of existingProjects) await pb.collection('projects').delete(p.id).catch(() => {});
+                        
+                        // Flatten incoming projects to gather IDs
+                        const incomingProjects = ['DE', 'EN', 'SR'].flatMap(lang => 
+                            updated.projectsData[lang as any].map((p: any) => ({ ...p, language: lang }))
+                        );
+                        const incomingIds = incomingProjects.map(p => p.id);
+
+                        for (const p of existingProjects) {
+                            if (!incomingIds.includes(p.id)) {
+                                await pb.collection('projects').delete(p.id).catch(() => {});
+                            }
+                        }
 
                         for (const lang of ['DE', 'EN', 'SR']) {
                             for (const [index, proj] of updated.projectsData[lang as any].entries()) {
-                                await pb.collection('projects').create({
-                                    ...proj,
-                                    language: lang,
-                                    sort_order: index
-                                });
+                                const payload = { ...proj, language: lang, sort_order: index };
+                                const exists = existingProjects.some(ep => ep.id === proj.id);
+                                if (exists) {
+                                    await pb.collection('projects').update(proj.id, payload).catch(() => {});
+                                } else {
+                                    // Make sure not to pass an invalid ID on create
+                                    const { id, ...createPayload } = payload;
+                                    await pb.collection('projects').create(createPayload).catch(() => {});
+                                }
                             }
                         }
                     }
@@ -167,23 +182,44 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     // 3. Gallery
                     if (newData.galleryImages) {
                          const existingGallery = await pb.collection('gallery_images').getFullList().catch(() => []);
-                         for (const g of existingGallery) await pb.collection('gallery_images').delete(g.id).catch(() => {});
+                         const incomingIds = updated.galleryImages.map(g => g.id);
+                         
+                         for (const g of existingGallery) {
+                             if (!incomingIds.includes(g.id)) {
+                                 await pb.collection('gallery_images').delete(g.id).catch(() => {});
+                             }
+                         }
                         
                          for (const [index, img] of updated.galleryImages.entries()) {
-                             await pb.collection('gallery_images').create({
-                                 ...img,
-                                 sort_order: index
-                             });
+                             const payload = { ...img, sort_order: index };
+                             const exists = existingGallery.some(eg => eg.id === img.id);
+                             if (exists) {
+                                 await pb.collection('gallery_images').update(img.id, payload).catch(() => {});
+                             } else {
+                                 const { id, ...createPayload } = payload;
+                                 await pb.collection('gallery_images').create(createPayload).catch(() => {});
+                             }
                          }
                     }
-                    
                     // 4. Blog Posts
                     if (newData.blogPosts) {
                         const existingPosts = await pb.collection('blog_posts').getFullList().catch(() => []);
-                        for (const p of existingPosts) await pb.collection('blog_posts').delete(p.id).catch(() => {});
+                        const incomingIds = updated.blogPosts.map(p => p.id);
+
+                        for (const p of existingPosts) {
+                            if (!incomingIds.includes(p.id)) {
+                                await pb.collection('blog_posts').delete(p.id).catch(() => {});
+                            }
+                        }
 
                         for (const post of updated.blogPosts) {
-                            await pb.collection('blog_posts').create(post);
+                             const exists = existingPosts.some(ep => ep.id === post.id);
+                             if (exists) {
+                                 await pb.collection('blog_posts').update(post.id, post).catch(() => {});
+                             } else {
+                                 const { id, ...createPayload } = post;
+                                 await pb.collection('blog_posts').create(createPayload).catch(() => {});
+                             }
                         }
                     }
 
