@@ -183,8 +183,8 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
 
 // Bio & Status Editor
 const BioEditor = ({ bioData, statusData, updateData }: { bioData: any, statusData: any, updateData: (b: any, s: any) => void }) => {
-  const [localBio, setLocalBio] = useState(bioData);
-  const [localStatus, setLocalStatus] = useState(statusData);
+  const [localBio, setLocalBio] = useState(bioData || { DE: { role: "", bio: "" }, EN: { role: "", bio: "" }, SR: { role: "", bio: "" } });
+  const [localStatus, setLocalStatus] = useState(statusData || { DE: "", EN: "", SR: "" });
 
   const handleBioChange = (lang: string, field: string, value: string) => {
     setLocalBio({
@@ -419,7 +419,7 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
 
 // Experience Editor
 const ExperienceEditor = ({ data, updateData }: { data: any, updateData: (data: any) => void }) => {
-  const [localData, setLocalData] = useState(data);
+  const [localData, setLocalData] = useState(data || { DE: [], EN: [], SR: [] });
   const [activeLang, setActiveLang] = useState('DE');
 
   const handleUpdateItem = (lang: string, index: number, field: string, value: string) => {
@@ -467,7 +467,7 @@ const ExperienceEditor = ({ data, updateData }: { data: any, updateData: (data: 
       </div>
 
       <div className="space-y-6">
-        {(localData[activeLang] || []).map((item: any, index: number) => (
+        {(localData && localData[activeLang] || []).map((item: any, index: number) => (
           <div key={item.id || index} className="flex gap-6 bg-white/5 p-6 rounded-lg border border-white/10 items-start relative mt-4">
             <button
               onClick={() => handleDeleteItem(activeLang, index)}
@@ -530,7 +530,7 @@ const ExperienceEditor = ({ data, updateData }: { data: any, updateData: (data: 
 
 // Projects Editor
 const ProjectsEditor = ({ data, updateData }: { data: any, updateData: (data: any) => void }) => {
-  const [localData, setLocalData] = useState(data);
+  const [localData, setLocalData] = useState(data || { DE: [], EN: [], SR: [] });
   const [selectedLang, setSelectedLang] = useState('DE');
   const [isTranslating, setIsTranslating] = useState(false);
 
@@ -667,7 +667,7 @@ const ProjectsEditor = ({ data, updateData }: { data: any, updateData: (data: an
       </div>
 
       <div className="space-y-8">
-        {localData[selectedLang].map((project: any, index: number) => (
+        {(localData && localData[selectedLang] || []).map((project: any, index: number) => (
           <div key={project.id} className="bg-white/5 p-6 rounded-lg border border-white/10 space-y-4">
             <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4">
               <input
@@ -797,7 +797,7 @@ const ProjectsEditor = ({ data, updateData }: { data: any, updateData: (data: an
 
 // Gallery Editor
 const GalleryEditor = ({ data, updateData }: { data: any[], updateData: (data: any[]) => void }) => {
-  const [localData, setLocalData] = useState(data);
+  const [localData, setLocalData] = useState(data || []);
 
   const handleUpdateImage = (index: number, field: string, value: string) => {
     const newData = [...localData];
@@ -857,7 +857,7 @@ const GalleryEditor = ({ data, updateData }: { data: any[], updateData: (data: a
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-        {localData.map((img, index) => (
+        {(localData || []).map((img, index) => (
           <div key={img.id || index} className="group flex flex-col gap-2 bg-white/5 rounded-lg border border-white/10 overflow-hidden p-4">
             <div
               className="relative aspect-[3/4] bg-black/50 border border-white/10 rounded overflow-hidden"
@@ -930,7 +930,7 @@ const GalleryEditor = ({ data, updateData }: { data: any[], updateData: (data: a
 
 // Blog Editor
 const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[]) => void }) => {
-  const [localData, setLocalData] = useState(data);
+  const [localData, setLocalData] = useState(data || []);
   const [selectedLang, setSelectedLang] = useState('DE');
   const [isTranslating, setIsTranslating] = useState(false);
 
@@ -1034,7 +1034,7 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
       </div>
 
       <div className="space-y-6">
-        {filteredPosts.map((post, index) => {
+        {(filteredPosts || []).map((post, index) => {
           const globalIndex = localData.findIndex(p => p.id === post.id);
           return (
             <div key={post.id} className="bg-white/5 p-6 rounded-2xl border border-white/10 space-y-4 relative group">
