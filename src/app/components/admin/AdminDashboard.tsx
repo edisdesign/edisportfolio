@@ -75,7 +75,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
   const { data, updateData } = usePortfolioData();
-  const [activeTab, setActiveTab] = useState<'blog' | 'bio' | 'hero' | 'projects' | 'gallery' | 'experience'>('blog');
+  const [activeTab, setActiveTab] = useState<'profile' | 'blog' | 'bio' | 'hero' | 'projects' | 'gallery' | 'experience'>('profile');
 
   return (
     <div className="min-h-screen bg-black text-white p-8 font-mono">
@@ -103,6 +103,13 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
           {/* Sidebar */}
           <div className="md:col-span-1 border-r border-white/20 pr-8">
             <nav className="flex flex-col gap-4">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`flex items-center gap-3 p-3 rounded-lg transition-colors border ${activeTab === 'profile' ? 'bg-indigo-600 text-white border-indigo-600' : 'hover:bg-white/10 border-transparent text-white/70'}`}
+              >
+                <User size={18} />
+                <span className="uppercase tracking-wider text-sm font-bold">Profile / Avatar</span>
+              </button>
               <button
                 onClick={() => setActiveTab('blog')}
                 className={`flex items-center gap-3 p-3 rounded-lg transition-colors border ${activeTab === 'blog' ? 'bg-indigo-600 text-white border-indigo-600' : 'hover:bg-white/10 border-transparent text-white/70'}`}
@@ -150,6 +157,12 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
 
           {/* Main Content Area */}
           <div className="md:col-span-3">
+            {activeTab === 'profile' && (
+              <ProfileEditor 
+                avatarUrl={data.avatar_url} 
+                updateData={(newUrl) => updateData({ avatar_url: newUrl })} 
+              />
+            )}
             {activeTab === 'blog' && (
               <BlogEditor data={data.blogPosts} updateData={(newPosts) => updateData({ blogPosts: newPosts })} />
             )}
@@ -412,6 +425,64 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
         >
           <Plus size={20} /> Add Hero Image
         </button>
+      </div>
+    </div>
+  );
+};
+
+// Profile / Avatar Editor
+const ProfileEditor = ({ avatarUrl, updateData }: { avatarUrl: string, updateData: (url: string) => void }) => {
+  const [localUrl, setLocalUrl] = useState(avatarUrl);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const compressedBase64 = await compressImage(file, 400, 400, 0.8); // Smaller for profile
+        setLocalUrl(compressedBase64);
+      } catch (error) {
+        console.error("Image compression failed", error);
+        alert("Błąd podczas wgryvanja zdjęcia.");
+      }
+    }
+  };
+
+  const handleSave = () => {
+    updateData(localUrl);
+    alert('Profilna slika je sačuvana!');
+  };
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-center border-b border-white/20 pb-4">
+        <h2 className="text-2xl font-bold uppercase tracking-wider">Edit Profile Image</h2>
+        <button onClick={handleSave} className="bg-white text-black px-6 py-2 uppercase tracking-widest text-xs hover:bg-white/80 transition-colors">Save Avatar</button>
+      </div>
+
+      <div className="max-w-md mx-auto text-center space-y-6">
+        <div className="relative group mx-auto w-48 h-48 rounded-full overflow-hidden border-4 border-white/10 bg-zinc-900 flex items-center justify-center">
+            <img src={localUrl} alt="Preview" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                <label className="cursor-pointer flex flex-col items-center justify-center text-white/80 hover:text-white p-4">
+                    <UploadCloud size={32} className="mb-2" />
+                    <span className="text-[10px] uppercase tracking-widest font-bold">Upload New</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+                </label>
+            </div>
+        </div>
+        
+        <div className="space-y-4">
+            <div>
+                <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Avatar URL (Direct Link)</label>
+                <input
+                    type="text"
+                    value={localUrl}
+                    onChange={(e) => setLocalUrl(e.target.value)}
+                    className="w-full bg-black border border-white/20 rounded p-3 text-white text-xs focus:outline-none focus:border-white transition-colors"
+                />
+            </div>
+            <p className="text-zinc-500 text-xs italic">Ova slika će se videti u "About" sekciji i u krugu pored tvog imena.</p>
+        </div>
       </div>
     </div>
   );

@@ -66,6 +66,7 @@ export interface PortfolioData {
         SR: any[];
     };
     blogPosts: BlogPost[];
+    avatar_url: string;
 }
 
 interface PortfolioContextType {
@@ -82,6 +83,7 @@ const defaultData: PortfolioData = {
     statusData: defaultStatusData,
     experienceData: defaultExperienceData,
     blogPosts: [],
+    avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=60",
 };
 
 const PortfolioContext = createContext<PortfolioContextType>({
@@ -158,7 +160,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                             date: p.date || new Date().toISOString(),
                             author: p.author || "Edi",
                             language: p.language || "DE"
-                        })) as BlogPost[]
+                        })) as BlogPost[],
+                        avatar_url: content?.avatar_url || defaultData.avatar_url
                     };
                     setData(freshData);
                     localStorage.setItem("portfolioData", JSON.stringify(freshData));
@@ -210,7 +213,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                             bio_sr: updated.bioData.SR,
                             status_de: updated.statusData.DE,
                             status_en: updated.statusData.EN,
-                            status_sr: updated.statusData.SR
+                            status_sr: updated.statusData.SR,
+                            avatar_url: updated.avatar_url
                         };
                         
                         try {

@@ -183,7 +183,7 @@ export const About = ({ language }: AboutProps) => {
                     <div>
                         <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-zinc-700 mb-6">
                             <img
-                                src={data.heroImages[0]?.src || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=60"}
+                                src={data.avatar_url}
                                 alt="Edis"
                                 className="w-full h-full object-cover object-top"
                             />
