@@ -15,6 +15,8 @@ import { ChaosIntro } from "./components/portfolio/ChaosIntro";
 import { ProjectModal } from "./components/portfolio/ProjectModal";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { Blog } from "./components/portfolio/Blog";
+import { BlogPost, usePortfolioData } from "./context/PortfolioContext";
+import { Calendar, User, X } from "lucide-react";
 import pb from "./lib/pocketbase";
 
 // Basic error boundary component
@@ -54,6 +56,7 @@ export default function App() {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
 
   // Safety timeout for intro - force it to end after 5 seconds no matter what
   React.useEffect(() => {
@@ -100,6 +103,62 @@ export default function App() {
           )}
         </AnimatePresence>
 
+        <AnimatePresence>
+          {selectedPost && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedPost(null)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-4xl max-h-[90vh] bg-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+              >
+                <div className="sticky top-0 z-10 p-6 bg-zinc-950/80 backdrop-blur-md border-b border-white/5 flex justify-between items-center">
+                  <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Blog Post Detail</h4>
+                  <button
+                    onClick={() => setSelectedPost(null)}
+                    className="p-2 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="overflow-y-auto overflow-x-hidden p-6 md:p-12">
+                  <div className="max-w-3xl mx-auto">
+                    <div className="mb-8 overflow-hidden rounded-2xl border border-zinc-800 shadow-xl">
+                      <img
+                        src={selectedPost.image}
+                        alt={selectedPost.title}
+                        className="w-full h-auto object-cover max-h-[400px]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-6 text-[10px] text-zinc-500 uppercase tracking-widest mb-6">
+                      <span className="flex items-center gap-1.5"><Calendar size={14} className="text-indigo-500" /> {new Date(selectedPost.date).toLocaleDateString()}</span>
+                      <span className="flex items-center gap-1.5"><User size={14} className="text-indigo-500" /> {selectedPost.author}</span>
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-8 uppercase tracking-tighter leading-none">
+                      {selectedPost.title}
+                    </h2>
+                    <div className="prose prose-invert prose-indigo max-w-none">
+                      <div className="text-zinc-300 leading-relaxed space-y-6 text-lg">
+                        {selectedPost.content.split('\n').map((para, i) => (
+                          <p key={i}>{para}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {!showIntro && !isMobile && <CustomCursor />}
 
         <motion.div
@@ -126,7 +185,7 @@ export default function App() {
           <SkillsMarquee language={language} />
           <Projects language={language} onSelectProject={setSelectedProject} />
           <UXGame language={language} />
-          <Blog language={language} />
+          <Blog language={language} onSelectPost={setSelectedPost} />
           <About language={language} />
           <Contact language={language} />
           <Footer

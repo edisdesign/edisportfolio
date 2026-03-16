@@ -101,7 +101,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             try {
                 // PocketBase usually uses collections. We'll fetch from 'portfolio_data'
                 // or similar. For now, we'll try to fetch all at once or handle errors.
-                const content = await pb.collection('portfolio_content').getFirstListItem('id="000000000000000"').catch(() => null);
+                const content = await pb.collection('portfolio_content').getList(1, 1).then(res => res.items[0]).catch(() => null);
                 const projects = await pb.collection('projects').getFullList({ sort: 'sort_order' }).catch(() => []);
                 const gallery = await pb.collection('gallery_images').getFullList({ sort: 'sort_order' }).catch(() => []);
                 const blog = await pb.collection('blog_posts').getFullList({ sort: '-date' }).catch(() => []);
@@ -122,7 +122,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         }
                     });
 
-                    setData({
+                    const freshData = {
                         heroImages: content?.hero_images || [],
                         projectsData: formattedProjects,
                         galleryImages: gallery as unknown as GalleryImage[] || [],
@@ -138,14 +138,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         },
                         experienceData: formattedTimeline.DE.length || formattedTimeline.EN.length || formattedTimeline.SR.length ? formattedTimeline : defaultExperienceData,
                         blogPosts: blog as unknown as BlogPost[] || []
-                    });
+                    };
+                    setData(freshData);
+                    localStorage.setItem("portfolioData", JSON.stringify(freshData));
                 } else {
                     console.log("PocketBase is empty, loading from localStorage fallback");
                     try {
                         const saved = localStorage.getItem("portfolioData");
                         if (saved) {
                             const parsed = JSON.parse(saved);
-                            setData(prev => ({ ...prev, ...parsed }));
+                            // Merge with defaultData to ensure all keys exist
+                            setData({ ...defaultData, ...parsed });
                         }
                     } catch (e) {
                         console.error("Local storage parse error", e);
@@ -158,7 +161,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     const saved = localStorage.getItem("portfolioData");
                     if (saved) {
                         const parsed = JSON.parse(saved);
-                        setData(prev => ({ ...prev, ...parsed }));
+                        setData({ ...defaultData, ...parsed });
                     }
                 } catch (e) {
                     console.error("Local storage error", e);
