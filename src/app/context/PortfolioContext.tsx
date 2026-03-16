@@ -140,18 +140,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         };
                         
                         try {
-                            const existing = await pb.collection('portfolio_content').getFirstListItem('');
+                            const existing = await pb.collection('portfolio_content').getFirstListItem('id!="invalid"');
                             await pb.collection('portfolio_content').update(existing.id, contentPayload);
                         } catch {
-                            await pb.collection('portfolio_content').create({ ...contentPayload });
+                            await pb.collection('portfolio_content').create(contentPayload);
                         }
                     }
 
                     // 2. Projects
                     if (newData.projectsData) {
-                        // Clear existing projects to avoid duplicates/stale data on total replace
-                        const existingProjects = await pb.collection('projects').getFullList();
-                        for (const p of existingProjects) await pb.collection('projects').delete(p.id);
+                        const existingProjects = await pb.collection('projects').getFullList().catch(() => []);
+                        for (const p of existingProjects) await pb.collection('projects').delete(p.id).catch(() => {});
 
                         for (const lang of ['DE', 'EN', 'SR']) {
                             for (const [index, proj] of updated.projectsData[lang as any].entries()) {
@@ -166,8 +165,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
                     // 3. Gallery
                     if (newData.galleryImages) {
-                         const existingGallery = await pb.collection('gallery_images').getFullList();
-                         for (const g of existingGallery) await pb.collection('gallery_images').delete(g.id);
+                         const existingGallery = await pb.collection('gallery_images').getFullList().catch(() => []);
+                         for (const g of existingGallery) await pb.collection('gallery_images').delete(g.id).catch(() => {});
                         
                          for (const [index, img] of updated.galleryImages.entries()) {
                              await pb.collection('gallery_images').create({
@@ -179,8 +178,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     
                     // 4. Blog Posts
                     if (newData.blogPosts) {
-                        const existingPosts = await pb.collection('blog_posts').getFullList();
-                        for (const p of existingPosts) await pb.collection('blog_posts').delete(p.id);
+                        const existingPosts = await pb.collection('blog_posts').getFullList().catch(() => []);
+                        for (const p of existingPosts) await pb.collection('blog_posts').delete(p.id).catch(() => {});
 
                         for (const post of updated.blogPosts) {
                             await pb.collection('blog_posts').create(post);
