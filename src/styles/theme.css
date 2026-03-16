@@ -127,6 +127,9 @@
   body {
     @apply bg-background text-foreground;
     position: relative; /* Fix for Framer Motion useScroll detection */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
 
   /* Custom Scrollbar for Dark Theme Aesthetics */
@@ -153,6 +156,9 @@
   html {
     font-size: var(--font-size);
     position: relative; /* Fix for Framer Motion useScroll detection */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
 
   h1 {
