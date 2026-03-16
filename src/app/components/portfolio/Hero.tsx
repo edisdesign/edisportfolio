@@ -37,6 +37,8 @@ export const Hero = ({ language }: HeroProps) => {
 
   if (isLoading) return <div className="h-screen bg-black" />;
 
+  const hasImages = images.length > 0 && images.some(img => img.src);
+
   const handleImageClick = (index: number) => {
     if (index === activeIndex) {
       setExpandedIndex(index);
@@ -225,13 +227,20 @@ export const Hero = ({ language }: HeroProps) => {
                     }}
                   >
                     <div className="relative w-full h-full touch-none">
-                      <motion.img
-                        src={img.src}
-                        alt="Carousel Item"
-                        className="w-full h-full object-cover pointer-events-none"
-                        animate={{ scale: isExpanded ? 1 : 1.15 }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                      />
+                      {img.src ? (
+                        <motion.img
+                          src={img.src}
+                          alt={img.label || "Carousel Item"}
+                          className="w-full h-full object-cover pointer-events-none"
+                          animate={{ scale: isExpanded ? 1 : 1.15 }}
+                          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 500%22><rect fill=%22%2318181b%22 width=%22400%22 height=%22500%22/></svg>'; }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+                          <Layers className="w-12 h-12 text-zinc-700" />
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60 pointer-events-none" />
 
                       {/* Label Badge */}

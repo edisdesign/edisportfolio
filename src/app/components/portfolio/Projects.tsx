@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "motion/react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Layers } from "lucide-react";
 import { ProjectModal } from "./ProjectModal";
 import { usePortfolioData } from "../../context/PortfolioContext";
 
@@ -57,11 +57,18 @@ export const Projects = ({ language, onSelectProject }: ProjectsProps & { onSele
                 }`}
             >
               {/* Image */}
-              <img
-                src={project.image}
-                alt={project.title}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-60"
-              />
+              {project.image ? (
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-60"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              ) : (
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-zinc-900 to-zinc-800 flex items-center justify-center">
+                  <Layers className="w-16 h-16 text-zinc-700" />
+                </div>
+              )}
 
               {/* Overlay Gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent opacity-90" />

@@ -78,7 +78,7 @@ export default function App() {
   // When admin logs in from Footer, both become true
   if (isAdmin && showAdminPanel) {
     return <AdminDashboard
-      onLogout={() => { setIsAdmin(false); setShowAdminPanel(false); }}
+      onLogout={() => { pb.authStore.clear(); setIsAdmin(false); setShowAdminPanel(false); }}
       onClose={() => setShowAdminPanel(false)}
     />;
   }

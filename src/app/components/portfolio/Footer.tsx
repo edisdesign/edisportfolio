@@ -8,6 +8,8 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 
+import pb from "../../lib/pocketbase";
+
 interface FooterProps {
   language: string;
   isAdmin: boolean;
@@ -21,18 +23,36 @@ export const Footer = ({ language, isAdmin, setIsAdmin, onOpenAdmin }: FooterPro
   const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  // Check if already authenticated on mount
+  React.useEffect(() => {
+    if (pb.authStore.isValid && pb.authStore.record) {
+      setIsAdmin(true);
+    }
+  }, []);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "Elhamdulillah.7") {
+    setIsLoggingIn(true);
+    setError("");
+
+    try {
+      // Authenticate with PocketBase as superuser (admin)
+      await pb.collection('_superusers').authWithPassword(email, password);
       setIsAdmin(true);
       setAdminModalOpen(false);
       setPassword("");
+      setEmail("");
       setError("");
-    } else {
-      setError("Incorrect password");
+    } catch (err: any) {
+      console.error("PocketBase auth failed:", err);
+      setError("Login failed. Check your email and password.");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -84,24 +104,34 @@ export const Footer = ({ language, isAdmin, setIsAdmin, onOpenAdmin }: FooterPro
           <DialogHeader>
             <DialogTitle>Admin Access</DialogTitle>
             <DialogDescription className="text-zinc-400">
-              Enter password to access the admin panel.
+              Sign in with your PocketBase admin credentials.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleAdminLogin} className="flex flex-col gap-4 mt-4">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Admin Email"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              autoFocus
+              required
+            />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              autoFocus
+              required
             />
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
               type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 font-medium transition-colors"
+              disabled={isLoggingIn}
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-4 py-2 font-medium transition-colors"
             >
-              Login
+              {isLoggingIn ? 'Signing in...' : 'Login'}
             </button>
           </form>
         </DialogContent>
