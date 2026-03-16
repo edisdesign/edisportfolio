@@ -451,7 +451,7 @@ export const About = ({ language }: AboutProps) => {
                                                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={comment.id} className="bg-zinc-900 p-3 rounded-lg border border-white/5">
                                                             <div className="flex justify-between items-center mb-1">
                                                                 <span className="font-bold text-indigo-300 text-xs">{comment.author_name}</span>
-                                                                <span className="text-[10px] text-zinc-600">{new Date(comment.created_at).toLocaleDateString()}</span>
+                                                                <span className="text-[10px] text-zinc-600">{new Date(comment.created).toLocaleDateString()}</span>
                                                             </div>
                                                             <p className="text-zinc-300 text-sm leading-relaxed">{comment.content}</p>
                                                         </motion.div>
