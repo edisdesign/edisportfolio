@@ -130,34 +130,60 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
             const syncToPocketBase = async () => {
                 try {
-                    // 1. Content update/upsert
-                    const contentPayload = {
-                        hero_images: updated.heroImages,
-                        bio_de: updated.bioData.DE,
-                        bio_en: updated.bioData.EN,
-                        bio_sr: updated.bioData.SR
-                    };
-                    
-                    try {
-                        const existing = await pb.collection('portfolio_content').getFirstListItem('id="000000000000000"');
-                        await pb.collection('portfolio_content').update(existing.id, contentPayload);
-                    } catch {
-                        await pb.collection('portfolio_content').create({ id: '000000000000000', ...contentPayload });
+                    // 1. Content (Bio & Hero)
+                    if (newData.bioData || newData.heroImages) {
+                        const contentPayload = {
+                            hero_images: updated.heroImages,
+                            bio_de: updated.bioData.DE,
+                            bio_en: updated.bioData.EN,
+                            bio_sr: updated.bioData.SR
+                        };
+                        
+                        try {
+                            const existing = await pb.collection('portfolio_content').getFirstListItem('');
+                            await pb.collection('portfolio_content').update(existing.id, contentPayload);
+                        } catch {
+                            await pb.collection('portfolio_content').create({ ...contentPayload });
+                        }
                     }
 
-                    // 2. Projects (Bulk delete/create is tricky in PB, better to update by ID if possible or clear)
-                    // For simplicity in this script, we'll just handle it similarly or log it.
-                    // In a real app, you'd manage IDs carefully.
-                    
-                    // 3. Blog Posts
-                    if (newData.blogPosts) {
-                        for (const post of updated.blogPosts) {
-                            try {
-                                const existing = await pb.collection('blog_posts').getFirstListItem(`slug="${post.slug}"`);
-                                await pb.collection('blog_posts').update(existing.id, post);
-                            } catch {
-                                await pb.collection('blog_posts').create(post);
+                    // 2. Projects
+                    if (newData.projectsData) {
+                        // Clear existing projects to avoid duplicates/stale data on total replace
+                        const existingProjects = await pb.collection('projects').getFullList();
+                        for (const p of existingProjects) await pb.collection('projects').delete(p.id);
+
+                        for (const lang of ['DE', 'EN', 'SR']) {
+                            for (const [index, proj] of updated.projectsData[lang as any].entries()) {
+                                await pb.collection('projects').create({
+                                    ...proj,
+                                    language: lang,
+                                    sort_order: index
+                                });
                             }
+                        }
+                    }
+
+                    // 3. Gallery
+                    if (newData.galleryImages) {
+                         const existingGallery = await pb.collection('gallery_images').getFullList();
+                         for (const g of existingGallery) await pb.collection('gallery_images').delete(g.id);
+                        
+                         for (const [index, img] of updated.galleryImages.entries()) {
+                             await pb.collection('gallery_images').create({
+                                 ...img,
+                                 sort_order: index
+                             });
+                         }
+                    }
+                    
+                    // 4. Blog Posts
+                    if (newData.blogPosts) {
+                        const existingPosts = await pb.collection('blog_posts').getFullList();
+                        for (const p of existingPosts) await pb.collection('blog_posts').delete(p.id);
+
+                        for (const post of updated.blogPosts) {
+                            await pb.collection('blog_posts').create(post);
                         }
                     }
 

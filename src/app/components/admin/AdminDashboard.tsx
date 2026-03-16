@@ -75,7 +75,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
   const { data, updateData } = usePortfolioData();
-  const [activeTab, setActiveTab] = useState<'blog' | 'bio' | 'hero' | 'projects' | 'gallery' | 'database'>('blog');
+  const [activeTab, setActiveTab] = useState<'blog' | 'bio' | 'hero' | 'projects' | 'gallery'>('blog');
 
   return (
     <div className="min-h-screen bg-black text-white p-8 font-mono">
@@ -138,13 +138,6 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
                 <ImageIcon size={18} />
                 <span className="uppercase tracking-wider text-sm">Gallery</span>
               </button>
-              <button
-                onClick={() => setActiveTab('database')}
-                className={`flex items-center gap-3 p-3 mt-8 rounded-lg transition-colors border ${activeTab === 'database' ? 'bg-indigo-500 text-white border-indigo-500' : 'hover:bg-indigo-500/10 border-transparent text-indigo-400'}`}
-              >
-                <Database size={18} />
-                <span className="uppercase tracking-wider text-sm font-bold">Database Sync</span>
-              </button>
             </nav>
           </div>
 
@@ -164,9 +157,6 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
             )}
             {activeTab === 'gallery' && (
               <GalleryEditor data={data.galleryImages} updateData={(newGallery) => updateData({ galleryImages: newGallery })} />
-            )}
-            {activeTab === 'database' && (
-              <DatabaseMigration data={data} />
             )}
           </div>
         </div>
@@ -795,118 +785,6 @@ const GalleryEditor = ({ data, updateData }: { data: any[], updateData: (data: a
   );
 };
 
-// Database Migration Component
-const DatabaseMigration = ({ data }: { data: any }) => {
-  const [isMigrating, setIsMigrating] = useState(false);
-  const [status, setStatus] = useState<string>('');
-
-  const handleMigrate = async () => {
-    if (!confirm('Are you sure you want to completely overwrite the cloud database (PocketBase) with your current local settings?')) return;
-
-    setIsMigrating(true);
-    setStatus('Starting migration to PocketBase...');
-
-    try {
-      setStatus('Uploading general settings (Hero & Bio)...');
-      
-      const contentPayload = {
-        hero_images: data.heroImages,
-        bio_de: data.bioData.DE,
-        bio_en: data.bioData.EN,
-        bio_sr: data.bioData.SR
-      };
-
-      try {
-        const existing = await pb.collection('portfolio_content').getFirstListItem('id="000000000000000"').catch(() => null);
-        if (existing) {
-          await pb.collection('portfolio_content').update(existing.id, contentPayload);
-        } else {
-          await pb.collection('portfolio_content').create({ id: '000000000000000', ...contentPayload });
-        }
-      } catch (e) {
-        console.error(e);
-      }
-
-      setStatus('Uploading projects...');
-      // Clear and re-upload projects (simulated bulk)
-      const existingProjects = await pb.collection('projects').getFullList();
-      for (const p of existingProjects) await pb.collection('projects').delete(p.id);
-
-      for (const lang of ['DE', 'EN', 'SR']) {
-        for (const [index, proj] of data.projectsData[lang as any].entries()) {
-          await pb.collection('projects').create({
-            ...proj,
-            language: lang,
-            sort_order: index
-          });
-        }
-      }
-
-      setStatus('Uploading gallery...');
-      const existingGallery = await pb.collection('gallery_images').getFullList();
-      for (const g of existingGallery) await pb.collection('gallery_images').delete(g.id);
-      
-      for (const [index, img] of data.galleryImages.entries()) {
-        await pb.collection('gallery_images').create({
-          ...img,
-          sort_order: index
-        });
-      }
-
-      setStatus('Uploading blog posts...');
-      const existingPosts = await pb.collection('blog_posts').getFullList();
-      for (const p of existingPosts) await pb.collection('blog_posts').delete(p.id);
-
-      for (const post of data.blogPosts) {
-        await pb.collection('blog_posts').create(post);
-      }
-
-      setStatus('Migration complete! Refresh to see changes on PocketBase.');
-    } catch (error: any) {
-      console.error(error);
-      setStatus(`Error during migration: ${error.message}`);
-    } finally {
-      setIsMigrating(false);
-    }
-  };
-
-  return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-center border-b border-white/20 pb-4">
-        <h2 className="text-2xl font-bold uppercase tracking-wider text-indigo-400">Database Synchronization</h2>
-      </div>
-
-      <div className="bg-indigo-950/30 border border-indigo-500/30 p-8 rounded-xl max-w-2xl space-y-6">
-        <div>
-          <h3 className="text-xl font-bold text-white mb-2">Migrate Local to Cloud</h3>
-          <p className="text-indigo-200/70 text-sm leading-relaxed">
-            This action will take all the changes you've made in your browser so far (Blog, Projects, Biography, Gallery, Hero Images) and forcefully push them to your connected PocketBase cloud database.
-          </p>
-          <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-sm">
-            <strong>Warning:</strong> Ensure you have imported the `pocketbase_schema.json` file in your PocketBase Settings &rarr; Import Collections before running this. This will overwrite existing data in the cloud.
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-white/5">
-          <button
-            onClick={handleMigrate}
-            disabled={isMigrating}
-            className={`w-full py-4 rounded-lg flex items-center justify-center gap-3 uppercase tracking-widest font-bold transition-all ${isMigrating ? 'bg-indigo-500/50 cursor-not-allowed text-white/50' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}
-          >
-            <Database size={20} />
-            {isMigrating ? 'Syncing...' : 'Push Local Data to Cloud (PocketBase)'}
-          </button>
-
-          {status && (
-            <div className={`mt-4 p-3 rounded text-sm ${status.includes('Error') ? 'bg-red-500/20 text-red-300' : 'bg-green-500/20 text-green-300'}`}>
-              {status}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 // Blog Editor
 const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[]) => void }) => {
   const [localData, setLocalData] = useState(data);
