@@ -174,7 +174,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     slug: p.slug || "",
                     excerpt: p.excerpt || "",
                     content: p.content || "",
-                    image: p.image_file ? getFileUrl(p, p.image_file) : (p.image || ""),
+                    image: p.image ? getFileUrl(p, p.image) : p.image_url,
                     date: p.date || new Date().toISOString(),
                     author: p.author || "Edi",
                     language: p.language || "DE"
@@ -243,27 +243,9 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     // through their own collections via the Admin panel editors.
                     // They use FormData file uploads, not JSON updates.
 
-                    // 2. Blog Posts
-                    if (newData.blogPosts) {
-                        const existingPosts = await pb.collection('blog_posts').getFullList().catch(() => []);
-                        const incomingIds = updated.blogPosts.map(p => p.id);
-
-                        for (const p of existingPosts) {
-                            if (!incomingIds.includes(p.id)) {
-                                await pb.collection('blog_posts').delete(p.id).catch(() => { });
-                            }
-                        }
-
-                        for (const post of updated.blogPosts) {
-                            const exists = existingPosts.some(ep => ep.id === post.id);
-                            if (exists) {
-                                await pb.collection('blog_posts').update(post.id, post).catch(() => { });
-                            } else {
-                                const { id, ...createPayload } = post;
-                                await pb.collection('blog_posts').create(createPayload).catch(() => { });
-                            }
-                        }
-                    }
+                    // NOTE: Hero images, gallery, projects, and BLOG POSTS are now managed directly
+                    // through their own collections via the Admin panel editors.
+                    // They use FormData file uploads, not JSON updates.
 
                     // 3. Experience Timeline
                     if (newData.experienceData) {

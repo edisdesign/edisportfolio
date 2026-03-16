@@ -100,7 +100,7 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
               />
             )}
             {activeTab === 'blog' && (
-              <BlogEditor data={data.blogPosts} updateData={(newPosts) => updateData({ blogPosts: newPosts })} />
+              <BlogEditor onDataChanged={refreshData} />
             )}
             {activeTab === 'bio' && (
               <BioEditor
@@ -961,60 +961,132 @@ const ExperienceEditor = ({ data, updateData }: { data: any, updateData: (data: 
   );
 };
 
-// Blog Editor
-const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[]) => void }) => {
-  const [localData, setLocalData] = useState(data || []);
+// Blog Editor — Uses PocketBase `blog_posts` collection
+// Each record has: title, slug, excerpt, content, image (file), date, author, language
+const BlogEditor = ({ onDataChanged }: { onDataChanged: () => Promise<void> }) => {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedLang, setSelectedLang] = useState('DE');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isSaving, setIsSaving] = useState<string | null>(null);
 
-  const handleUpdatePost = (index: number, field: string, value: any) => {
-    const newData = [...localData];
-    newData[index] = { ...newData[index], [field]: value };
-    setLocalData(newData);
+  const fetchPosts = async () => {
+    setIsLoading(true);
+    try {
+      const records = await pb.collection('blog_posts').getFullList({ sort: '-date' });
+      setPosts(records);
+    } catch (e) {
+      console.error("Failed to fetch blog posts:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchPosts(); }, []);
+
+  const handleAddField = (index: number, field: string, value: any) => {
+    const newPosts = [...posts];
+    newPosts[index] = { ...newPosts[index], [field]: value };
+    setPosts(newPosts);
+  };
+
+  const handleSavePost = async (index: number) => {
+    const post = posts[index];
+    setIsSaving(post.id);
+    try {
+      const formData = new FormData();
+      formData.append('title', post.title);
+      formData.append('excerpt', post.excerpt);
+      formData.append('content', post.content);
+      formData.append('author', post.author);
+      formData.append('language', post.language);
+      formData.append('slug', post.slug || post.title.toLowerCase().replace(/ /g, '-'));
+      formData.append('date', post.date || new Date().toISOString());
+
+      if (post._newImageFile) {
+        formData.append('image', post._newImageFile);
+      } else if (post.image && typeof post.image === 'string' && post.image.startsWith('http')) {
+        // If it's a URL, we might need an image_url text field if PocketBase supports it, 
+        // but since it's a File field, we prefer uploads.
+      }
+
+      if (post.id && !post.id.startsWith('temp-')) {
+        await pb.collection('blog_posts').update(post.id, formData);
+      } else {
+        await pb.collection('blog_posts').create(formData);
+      }
+      
+      alert("Post saved successfully!");
+      fetchPosts();
+      onDataChanged();
+    } catch (e) {
+      console.error("Save failed:", e);
+      alert("Save failed.");
+    } finally {
+      setIsSaving(null);
+    }
   };
 
   const handleAddPost = () => {
     const newPost = {
-      id: Date.now().toString(),
-      title: 'Neuer Blogbeitrag',
-      slug: 'neuer-beitrag-' + Date.now(),
-      excerpt: 'Kurze Zusammenfassung...',
-      content: 'Inhalt des Beitrags...',
-      image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop',
-      date: new Date().toISOString().replace('T', ' '),
-      author: 'Edis Muminović',
-      language: selectedLang
+      id: 'temp-' + Date.now(),
+      title: 'New Bio Post',
+      excerpt: 'Summary...',
+      content: 'Content...',
+      author: 'Edi',
+      language: selectedLang,
+      date: new Date().toISOString()
     };
-    setLocalData([newPost, ...localData]);
+    setPosts([newPost, ...posts]);
   };
 
-  const handleDeletePost = (index: number) => {
-    const newData = [...localData];
-    newData.splice(index, 1);
-    setLocalData(newData);
-  };
-
-  const handleTranslatePost = async (postIndex: number, sourceLang: string) => {
-    setIsTranslating(true);
-    const targetLangs = ['DE', 'EN', 'SR'].filter(l => l !== sourceLang);
-    const sourcePost = localData[postIndex];
-
+  const handleDeletePost = async (id: string, index: number) => {
+    if (id.startsWith('temp-')) {
+      const newPosts = [...posts];
+      newPosts.splice(index, 1);
+      setPosts(newPosts);
+      return;
+    }
+    if (!confirm("Are you sure?")) return;
     try {
-      const newData = [...localData];
-      for (const targetLang of targetLangs) {
-        const newPost = {
-          ...sourcePost,
-          id: Date.now().toString() + targetLang,
-          title: await translateText(sourcePost.title, sourceLang, targetLang),
-          excerpt: await translateText(sourcePost.excerpt, sourceLang, targetLang),
-          content: await translateText(sourcePost.content, sourceLang, targetLang),
-          language: targetLang,
-          date: new Date().toISOString().replace('T', ' ')
+      await pb.collection('blog_posts').delete(id);
+      fetchPosts();
+      onDataChanged();
+    } catch (e) {
+      alert("Delete failed.");
+    }
+  };
+
+  const handleTranslatePost = async (index: number) => {
+    const post = posts[index];
+    setIsTranslating(true);
+    try {
+      const targetLangs = ['DE', 'EN', 'SR'].filter(l => l !== post.language);
+      for (const lang of targetLangs) {
+        const translated = {
+          ...post,
+          id: 'temp-' + Date.now() + lang,
+          language: lang,
+          title: await translateText(post.title, post.language, lang),
+          excerpt: await translateText(post.excerpt, post.language, lang),
+          content: await translateText(post.content, post.language, lang),
         };
-        newData.push(newPost);
+        // In a real scenario, we might want to save these automatically or let user review
+        // For now, let's just create them in PB
+        const formData = new FormData();
+        formData.append('title', translated.title);
+        formData.append('excerpt', translated.excerpt);
+        formData.append('content', translated.content);
+        formData.append('author', translated.author);
+        formData.append('language', translated.language);
+        formData.append('slug', translated.title.toLowerCase().replace(/ /g, '-'));
+        formData.append('date', translated.date);
+        // Copy image if possible (PB doesn't easily copy files between records via API without re-uploading)
+        await pb.collection('blog_posts').create(formData);
       }
-      setLocalData(newData);
-      alert('Post translated!');
+      alert("Translated and saved as new posts!");
+      fetchPosts();
+      onDataChanged();
     } catch (e) {
       alert("Translation failed.");
     } finally {
@@ -1022,91 +1094,80 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
     }
   };
 
-  const handleSave = () => {
-    updateData(localData);
-    alert('Blog posts saved!');
-  };
-
-  const filteredPosts = localData.filter(p => p.language === selectedLang);
+  if (isLoading) return <div className="text-center py-20 opacity-50">Loading Blog...</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center border-b border-white/20 pb-4">
-        <h2 className="text-2xl font-bold uppercase tracking-wider">Manage Blog</h2>
+        <h2 className="text-2xl font-bold uppercase tracking-wider">Edit Blog</h2>
         <div className="flex gap-4">
-          <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)} className="bg-black/50 border border-white/20 rounded p-2 text-white text-xs uppercase">
+          <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)} className="bg-black/50 border border-white/20 rounded px-3 py-1 text-xs uppercase font-bold outline-none focus:border-white">
             <option value="DE">DE</option>
             <option value="EN">EN</option>
             <option value="SR">SR</option>
           </select>
-          <button onClick={handleSave} className="bg-white text-black px-6 py-2 uppercase tracking-widest text-xs font-bold hover:bg-white/80 transition-colors">Save All</button>
+          <button onClick={handleAddPost} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-indigo-500 transition-colors flex items-center gap-2">
+            <Plus size={16} /> New Post
+          </button>
         </div>
       </div>
 
       <div className="space-y-6">
-        {(filteredPosts || []).map((post) => {
-          const globalIndex = localData.findIndex(p => p.id === post.id);
+        {posts.filter(p => p.language === selectedLang || p.id.startsWith('temp-')).map((post, idx) => {
+          const globalIdx = posts.findIndex(p => p.id === post.id);
+          const displayImg = post._newImageFile ? URL.createObjectURL(post._newImageFile) : (post.image ? getFileUrl(post, post.image) : "");
+          
           return (
             <div key={post.id} className="bg-white/5 p-6 rounded-2xl border border-white/10 space-y-4 relative group">
-              <button onClick={() => handleDeletePost(globalIndex)} className="absolute top-4 right-4 text-zinc-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
-                <Trash size={18} />
-              </button>
-              <div className="flex gap-6">
-                <div className="w-1/4 aspect-video bg-black/50 rounded-lg overflow-hidden border border-white/10 relative group/img">
-                  {post.image ? (
-                    <img src={post.image} alt={post.title} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }} />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-zinc-600"><ImageIcon size={32} /></div>
-                  )}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center">
-                    <label className="cursor-pointer flex flex-col items-center justify-center text-white/80 hover:text-white p-2">
-                      <UploadCloud size={20} className="mb-1" />
-                      <span className="text-[8px] uppercase tracking-widest font-bold">Upload Image</span>
+              <div className="flex justify-between items-start">
+                <div className="flex gap-6 flex-1">
+                  <div className="w-40 aspect-video bg-black/50 rounded-lg overflow-hidden border border-white/10 relative group/img shrink-0">
+                    {displayImg ? (
+                      <img src={displayImg} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white/20"><ImageIcon size={32} /></div>
+                    )}
+                    <label className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer">
+                      <UploadCloud size={24} className="mb-1" />
+                      <span className="text-[10px] font-bold uppercase">Upload</span>
                       <input type="file" className="hidden" accept="image/*" onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.readAsDataURL(file);
-                          reader.onload = () => {
-                            handleUpdatePost(globalIndex, 'image', reader.result as string);
-                          };
-                        }
+                        if (file) handleAddField(globalIdx, '_newImageFile', file);
                       }} />
                     </label>
                   </div>
-                </div>
-                <div className="flex-1 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <input type="text" value={post.title} onChange={(e) => handleUpdatePost(globalIndex, 'title', e.target.value)} className="w-full bg-transparent text-xl font-bold border-b border-white/10 focus:border-white outline-none pb-1" placeholder="Post Title" />
-                    <button
-                      onClick={() => handleTranslatePost(globalIndex, selectedLang)}
-                      disabled={isTranslating}
-                      className={`ml-4 flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors shrink-0 ${isTranslating ? 'bg-white/10 text-white/40' : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40'}`}
-                    >
-                      <Globe size={14} /><span className="text-[10px] uppercase font-bold">{isTranslating ? '...' : 'Translate'}</span>
-                    </button>
+                  <div className="flex-1 space-y-3">
+                    <input type="text" value={post.title} onChange={(e) => handleAddField(globalIdx, 'title', e.target.value)} className="w-full bg-transparent text-xl font-bold border-b border-white/10 focus:border-white outline-none pb-1" placeholder="Title" />
+                    <textarea value={post.excerpt} onChange={(e) => handleAddField(globalIdx, 'excerpt', e.target.value)} className="w-full bg-transparent text-sm text-zinc-400 outline-none h-16 resize-none" placeholder="Excerpt..." />
                   </div>
-                  <textarea value={post.excerpt} onChange={(e) => handleUpdatePost(globalIndex, 'excerpt', e.target.value)} className="w-full bg-transparent text-sm text-zinc-400 outline-none h-16 resize-none" placeholder="Excerpt" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <button onClick={() => handleDeletePost(post.id, globalIdx)} className="p-2 text-zinc-500 hover:text-red-400 transition-colors"><Trash size={18} /></button>
+                  <button onClick={() => handleTranslatePost(globalIdx)} disabled={isTranslating} className="p-2 text-indigo-400 hover:text-indigo-300"><Globe size={18} /></button>
                 </div>
               </div>
+
               <div>
-                <label className="text-[10px] uppercase font-bold text-zinc-500 mb-2 block tracking-widest">Full Content</label>
-                <textarea value={post.content} onChange={(e) => handleUpdatePost(globalIndex, 'content', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-white/30 h-40 font-serif leading-relaxed" placeholder="Content..." />
+                <label className="text-[10px] uppercase font-bold text-zinc-500 mb-2 block tracking-widest">Post Content</label>
+                <textarea value={post.content} onChange={(e) => handleAddField(globalIdx, 'content', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-white/30 h-40 font-serif leading-relaxed" placeholder="Write something..." />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <input type="text" value={post.image} onChange={(e) => handleUpdatePost(globalIndex, 'image', e.target.value)} className="bg-black/50 border border-white/10 rounded p-2 text-xs text-zinc-500" placeholder="Image URL (or upload above)" />
-                <input type="text" value={post.author} onChange={(e) => handleUpdatePost(globalIndex, 'author', e.target.value)} className="bg-black/50 border border-white/10 rounded p-2 text-xs text-zinc-500" placeholder="Author" />
+
+              <div className="flex justify-between items-center pt-2">
+                <div className="flex gap-4">
+                  <input type="text" value={post.author} onChange={(e) => handleAddField(globalIdx, 'author', e.target.value)} className="bg-transparent border-b border-white/10 text-xs text-zinc-500 outline-none" placeholder="Author" />
+                  <span className="text-[10px] text-zinc-600 uppercase font-mono">{new Date(post.date).toLocaleDateString()}</span>
+                </div>
+                <button 
+                  onClick={() => handleSavePost(globalIdx)}
+                  disabled={isSaving === post.id}
+                  className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${isSaving === post.id ? 'bg-white/10 text-white/40' : 'bg-white text-black hover:bg-white/80'}`}
+                >
+                  {isSaving === post.id ? 'Saving...' : 'Save Post'}
+                </button>
               </div>
             </div>
           );
         })}
-
-        <button onClick={handleAddPost}
-          className="w-full py-12 border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center text-zinc-500 hover:text-white hover:border-white/30 transition-all bg-white/0 hover:bg-white/5"
-        >
-          <Plus size={32} className="mb-2" />
-          <span className="uppercase tracking-widest text-xs font-bold">Write New Post</span>
-        </button>
       </div>
     </div>
   );
