@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { usePortfolioData } from "../../context/PortfolioContext";
 import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database, Globe } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -75,7 +75,7 @@ interface AdminDashboardProps {
 
 export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
   const { data, updateData } = usePortfolioData();
-  const [activeTab, setActiveTab] = useState<'bio' | 'hero' | 'projects' | 'gallery' | 'database'>('bio');
+  const [activeTab, setActiveTab] = useState<'blog' | 'bio' | 'hero' | 'projects' | 'gallery' | 'database'>('blog');
 
   return (
     <div className="min-h-screen bg-black text-white p-8 font-mono">
@@ -103,6 +103,13 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
           {/* Sidebar */}
           <div className="md:col-span-1 border-r border-white/20 pr-8">
             <nav className="flex flex-col gap-4">
+              <button
+                onClick={() => setActiveTab('blog')}
+                className={`flex items-center gap-3 p-3 rounded-lg transition-colors border ${activeTab === 'blog' ? 'bg-indigo-600 text-white border-indigo-600' : 'hover:bg-white/10 border-transparent text-white/70'}`}
+              >
+                <Edit2 size={18} />
+                <span className="uppercase tracking-wider text-sm font-bold">Blog Posts</span>
+              </button>
               <button
                 onClick={() => setActiveTab('bio')}
                 className={`flex items-center gap-3 p-3 rounded-lg transition-colors border ${activeTab === 'bio' ? 'bg-white text-black border-white' : 'hover:bg-white/10 border-transparent text-white/70'}`}
@@ -143,6 +150,9 @@ export const AdminDashboard = ({ onLogout, onClose }: AdminDashboardProps) => {
 
           {/* Main Content Area */}
           <div className="md:col-span-3">
+            {activeTab === 'blog' && (
+              <BlogEditor data={data.blogPosts} updateData={(newPosts) => updateData({ blogPosts: newPosts })} />
+            )}
             {activeTab === 'bio' && (
               <BioEditor data={data.bioData} updateData={(newBio) => updateData({ bioData: newBio })} />
             )}
@@ -888,7 +898,7 @@ const DatabaseMigration = ({ data }: { data: any }) => {
             className={`w-full py-4 rounded-lg flex items-center justify-center gap-3 uppercase tracking-widest font-bold transition-all ${isMigrating ? 'bg-indigo-500/50 cursor-not-allowed text-white/50' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}`}
           >
             <Database size={20} />
-            {isMigrating ? 'Syncing...' : 'Push Local Data to Supabase'}
+            {isMigrating ? 'Syncing...' : 'Push Local Data to Cloud (PocketBase)'}
           </button>
 
           {status && (
@@ -897,6 +907,147 @@ const DatabaseMigration = ({ data }: { data: any }) => {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
+// Blog Editor
+const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[]) => void }) => {
+  const [localData, setLocalData] = useState(data);
+  const [selectedLang, setSelectedLang] = useState('DE');
+
+  const handleUpdatePost = (index: number, field: string, value: any) => {
+    const newData = [...localData];
+    newData[index] = { ...newData[index], [field]: value };
+    setLocalData(newData);
+  };
+
+  const handleAddPost = () => {
+    const newPost = {
+      id: Date.now().toString(),
+      title: 'Neuer Blogbeitrag',
+      slug: 'neuer-beitrag-' + Date.now(),
+      excerpt: 'Kurze Zusammenfassung...',
+      content: 'Inhalt des Beitrags...',
+      image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop',
+      date: new Date().toISOString(),
+      author: 'Edis Muminović',
+      language: selectedLang
+    };
+    setLocalData([newPost, ...localData]);
+  };
+
+  const handleDeletePost = (index: number) => {
+    const newData = [...localData];
+    newData.splice(index, 1);
+    setLocalData(newData);
+  };
+
+  const handleSave = () => {
+    updateData(localData);
+    alert('Blog posts saved locally');
+  };
+
+  const handleSeed = () => {
+    const mockPosts = [
+      { id: '1', title: 'The Future of Minimalism', slug: 'minimalism', excerpt: 'How less is becoming more in modern design systems.', content: 'Minimalism is not about the lack of something. It is about the perfect amount of something...', image: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=800', date: new Date().toISOString(), author: 'Edis', language: 'EN' },
+      { id: '2', title: 'Why Typography Matters', slug: 'typography', excerpt: 'The silent voice of your interface.', content: 'Typography is more than just selecting a font. It is about hierarchy, readability, and mood...', image: 'https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?w=800', date: new Date().toISOString(), author: 'Edis', language: 'EN' },
+      { id: '3', title: 'Micro-interactions', slug: 'micro-interactions', excerpt: 'Small details, big impact on UX.', content: 'Micro-interactions are the functional animations that provide feedback and delight...', image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?w=800', date: new Date().toISOString(), author: 'Edis', language: 'DE' },
+      { id: '4', title: 'Design Systeme', slug: 'design-systeme', excerpt: 'Skalierbare Design-Lösungen für moderne Apps.', content: 'Ein gutes Design-System ist die Grundlage für jede erfolgreiche digitale Konsistenz...', image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800', date: new Date().toISOString(), author: 'Edis', language: 'DE' },
+      { id: '5', title: 'Umetnost Dizajna', slug: 'umetnost-dizajna', excerpt: 'Ravnoteža između estetike i funkcionalnosti.', content: 'Dizajn nije samo ono kako izgleda, već i kako funkcioniše u rukama korisnika...', image: 'https://images.unsplash.com/photo-1508261301902-69a303ba780a?w=800', date: new Date().toISOString(), author: 'Edis', language: 'SR' },
+      { id: '6', title: 'Portfolio Razvoj', slug: 'portfolio-razvoj', excerpt: 'Kako izgraditi prepoznatljiv brend.', content: 'Vaš portfolio je vaša vizuelna biografija. Svaki detalj priča priču o vašem radu...', image: 'https://images.unsplash.com/photo-1542744095-2ad4870f62dd?w=800', date: new Date().toISOString(), author: 'Edis', language: 'SR' }
+    ];
+    setLocalData([...mockPosts, ...localData]);
+  };
+
+  const filteredPosts = localData.filter(p => p.language === selectedLang);
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-center border-b border-white/20 pb-4">
+        <h2 className="text-2xl font-bold uppercase tracking-wider">Manage Blog</h2>
+        <div className="flex gap-4">
+          <button onClick={handleSeed} className="text-indigo-400 border border-indigo-400/30 px-4 py-2 uppercase tracking-widest text-[10px] hover:bg-indigo-400/10 transition-colors">Seed Mock Posts</button>
+          <select 
+            value={selectedLang} 
+            onChange={(e) => setSelectedLang(e.target.value)}
+            className="bg-black/50 border border-white/20 rounded p-2 text-white text-xs uppercase"
+          >
+            <option value="DE">DE</option>
+            <option value="EN">EN</option>
+            <option value="SR">SR</option>
+          </select>
+          <button onClick={handleSave} className="bg-white text-black px-6 py-2 uppercase tracking-widest text-xs font-bold hover:bg-white/80 transition-colors">Save All</button>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        {filteredPosts.map((post, index) => {
+          const globalIndex = localData.findIndex(p => p.id === post.id);
+          return (
+            <div key={post.id} className="bg-white/5 p-6 rounded-2xl border border-white/10 space-y-4 relative group">
+              <button 
+                onClick={() => handleDeletePost(globalIndex)}
+                className="absolute top-4 right-4 text-zinc-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <Trash size={18} />
+              </button>
+              <div className="flex gap-6">
+                <div className="w-1/4 aspect-video bg-black/50 rounded-lg overflow-hidden border border-white/10">
+                  <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <input 
+                    type="text" 
+                    value={post.title}
+                    onChange={(e) => handleUpdatePost(globalIndex, 'title', e.target.value)}
+                    className="w-full bg-transparent text-xl font-bold border-b border-white/10 focus:border-white outline-none pb-1"
+                    placeholder="Post Title"
+                  />
+                  <textarea 
+                    value={post.excerpt}
+                    onChange={(e) => handleUpdatePost(globalIndex, 'excerpt', e.target.value)}
+                    className="w-full bg-transparent text-sm text-zinc-400 outline-none h-16 resize-none"
+                    placeholder="Excerpt / Summary"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase font-bold text-zinc-500 mb-2 block tracking-widest">Full Content</label>
+                <textarea 
+                  value={post.content}
+                  onChange={(e) => handleUpdatePost(globalIndex, 'content', e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-white/30 h-40 font-serif leading-relaxed"
+                  placeholder="The story goes here..."
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <input 
+                  type="text" 
+                  value={post.image}
+                  onChange={(e) => handleUpdatePost(globalIndex, 'image', e.target.value)}
+                  className="bg-black/50 border border-white/10 rounded p-2 text-xs text-zinc-500"
+                  placeholder="Image URL"
+                />
+                <input 
+                  type="text" 
+                  value={post.author}
+                  onChange={(e) => handleUpdatePost(globalIndex, 'author', e.target.value)}
+                  className="bg-black/50 border border-white/10 rounded p-2 text-xs text-zinc-500"
+                  placeholder="Author"
+                />
+              </div>
+            </div>
+          );
+        })}
+
+        <button 
+          onClick={handleAddPost}
+          className="w-full py-12 border border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center text-zinc-500 hover:text-white hover:border-white/30 transition-all bg-white/0 hover:bg-white/5"
+        >
+          <Plus size={32} className="mb-2" />
+          <span className="uppercase tracking-widest text-xs font-bold">Write New Post</span>
+        </button>
       </div>
     </div>
   );

@@ -30,6 +30,18 @@ export interface GalleryImage {
     likes_count?: number;
 }
 
+export interface BlogPost {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    image: string;
+    date: string;
+    author: string;
+    language: 'DE' | 'EN' | 'SR';
+}
+
 export interface PortfolioData {
     heroImages: HeroImage[];
     projectsData: {
@@ -43,6 +55,7 @@ export interface PortfolioData {
         EN: { role: string; bio: string };
         SR: { role: string; bio: string };
     };
+    blogPosts: BlogPost[];
 }
 
 interface PortfolioContextType {
@@ -55,6 +68,7 @@ const defaultData: PortfolioData = {
     projectsData: defaultProjectsData,
     galleryImages: defaultGalleryImages,
     bioData: defaultBioData,
+    blogPosts: [],
 };
 
 const PortfolioContext = createContext<PortfolioContextType>({
@@ -105,7 +119,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                             DE: contentData.bio_de || { role: "", bio: "" },
                             EN: contentData.bio_en || { role: "", bio: "" },
                             SR: contentData.bio_sr || { role: "", bio: "" }
-                        }
+                        },
+                        blogPosts: contentData.blog_posts || []
                     });
                 } else {
                     // Fallback to local storage if tables are empty
@@ -139,7 +154,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         hero_images: updated.heroImages,
                         bio_de: updated.bioData.DE,
                         bio_en: updated.bioData.EN,
-                        bio_sr: updated.bioData.SR
+                        bio_sr: updated.bioData.SR,
+                        blog_posts: updated.blogPosts
                     });
 
                     // 2. Projects

@@ -12,6 +12,7 @@ import { CustomCursor } from "./components/portfolio/CustomCursor";
 import { ChaosIntro } from "./components/portfolio/ChaosIntro";
 import { ProjectModal } from "./components/portfolio/ProjectModal";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
+import { Blog } from "./components/portfolio/Blog";
 
 export default function App() {
   const [language, setLanguage] = useState("DE");
@@ -71,6 +72,7 @@ export default function App() {
           <SkillsMarquee language={language} />
           <Projects language={language} onSelectProject={setSelectedProject} />
           <UXGame language={language} />
+          <Blog language={language} />
           <About language={language} />
           <Contact language={language} />
           <Footer

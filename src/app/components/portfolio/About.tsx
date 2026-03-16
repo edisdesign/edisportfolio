@@ -239,15 +239,24 @@ export const About = ({ language }: AboutProps) => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-zinc-500 text-sm mb-3 uppercase tracking-wider">{t.stack}</p>
-                            <div className="flex gap-4 text-zinc-300">
+                            <div className="flex gap-4 text-zinc-300 items-center">
                                 <Figma size={24} className="hover:text-pink-500 transition-colors" />
                                 <PenTool size={24} className="hover:text-blue-500 transition-colors" />
                                 <Layers size={24} className="hover:text-yellow-500 transition-colors" />
                                 <Globe size={24} className="hover:text-green-500 transition-colors" />
+                                <div className="h-6 w-px bg-zinc-800 mx-1" />
+                                <a href="https://antigravity.google" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 group/ag">
+                                    <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center overflow-hidden grayscale group-hover/ag:grayscale-0 transition-all border border-zinc-700">
+                                        <img src="https://antigravity.dev/logo.png" alt="Antigravity" className="w-4 h-4 object-contain" onError={(e) => {
+                                            (e.target as HTMLImageElement).src = 'https://www.google.com/favicon.ico';
+                                        }} />
+                                    </div>
+                                    <span className="text-[10px] uppercase tracking-tighter font-bold text-zinc-500 group-hover/ag:text-white transition-colors">Antigravity</span>
+                                </a>
                             </div>
                         </div>
                         <div className="text-right hidden sm:block">
-                            <p className="text-zinc-400 text-xs">Figma • Adobe • Protopie • Webflow</p>
+                            <p className="text-zinc-400 text-xs text-balance">Figma • Adobe • PocketBase • Antigravity</p>
                         </div>
                     </div>
                 </>
