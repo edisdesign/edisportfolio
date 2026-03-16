@@ -7,10 +7,12 @@ interface ExperienceProps {
 }
 
 export const Experience = ({ language }: ExperienceProps) => {
-  const { data } = usePortfolioData();
+  const { data, isLoading } = usePortfolioData();
   const timelineData = data.experienceData?.[language as 'DE' | 'EN' | 'SR'] || [];
   
   const containerRef = useRef<HTMLDivElement>(null);
+
+  if (isLoading) return <div className="py-24 bg-zinc-950 min-h-[300px]" />;
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end center"]

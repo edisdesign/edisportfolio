@@ -17,10 +17,12 @@ interface HeroProps {
 }
 
 export const Hero = ({ language }: HeroProps) => {
-  const { data } = usePortfolioData();
+  const { data, isLoading } = usePortfolioData();
   const images = data.heroImages || [];
 
   const [activeIndex, setActiveIndex] = useState(0);
+
+  if (isLoading) return <div className="h-screen bg-black" />;
   const [expandedIndex, setExpandedIndex] = useState<
     number | null
   >(null);

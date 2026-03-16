@@ -11,10 +11,12 @@ interface AboutProps {
 }
 
 export const About = ({ language }: AboutProps) => {
-    const { data } = usePortfolioData();
+    const { data, isLoading } = usePortfolioData();
     const galleryImages = data.galleryImages || [];
 
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+
+    if (isLoading) return <div className="min-h-screen bg-black" />;
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState("");
     const [newCommentName, setNewCommentName] = useState("");

@@ -16,7 +16,7 @@ const headings = {
 
 export const Projects = ({ language, onSelectProject }: ProjectsProps & { onSelectProject: (project: any) => void }) => {
   const sectionRef = useRef<HTMLElement>(null);
-  const { data } = usePortfolioData();
+  const { data, isLoading } = usePortfolioData();
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -27,6 +27,8 @@ export const Projects = ({ language, onSelectProject }: ProjectsProps & { onSele
 
   const projects = data.projectsData[language as keyof typeof data.projectsData] || [];
   const heading = headings[language as keyof typeof headings];
+
+  if (isLoading) return <div className="py-24 bg-zinc-950 min-h-[400px]" />;
 
   return (
     <section ref={sectionRef} id="projects" className="py-24 bg-zinc-950 text-white relative">

@@ -71,6 +71,7 @@ export interface PortfolioData {
 interface PortfolioContextType {
     data: PortfolioData;
     updateData: (newData: Partial<PortfolioData>) => void;
+    isLoading: boolean;
 }
 
 const defaultData: PortfolioData = {
@@ -86,12 +87,14 @@ const defaultData: PortfolioData = {
 const PortfolioContext = createContext<PortfolioContextType>({
     data: defaultData,
     updateData: () => { },
+    isLoading: true,
 });
 
 import pb from "../lib/pocketbase";
 
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [data, setData] = useState<PortfolioData>(defaultData);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchPocketBaseData = async () => {
@@ -145,6 +148,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 console.error("Failed to fetch from PocketBase:", error);
                 const saved = localStorage.getItem("portfolioData");
                 if (saved) setData(JSON.parse(saved));
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -293,7 +298,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     return (
-        <PortfolioContext.Provider value={{ data, updateData }}>
+        <PortfolioContext.Provider value={{ data, updateData, isLoading }}>
             {children}
         </PortfolioContext.Provider>
     );
