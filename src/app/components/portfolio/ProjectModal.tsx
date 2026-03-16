@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ExternalLink, Layers, PenTool, Code2, Mail, Send, CheckCircle2 } from "lucide-react";
-import { supabase } from "../../lib/supabase";
+import pb from "../../lib/pocketbase";
 
 interface ProjectDetailsProps {
     onClose: () => void;
@@ -70,15 +70,11 @@ export const ProjectModal = ({ onClose, project, language }: ProjectDetailsProps
         setStatus("submitting");
 
         try {
-            const { error } = await supabase
-                .from('project_inquiries')
-                .insert({
-                    project_id: project.id,
-                    sender_email: email,
-                    message: message
-                });
-
-            if (error) throw error;
+            await pb.collection('project_inquiries').create({
+                project_id: project.id,
+                sender_email: email,
+                message: message
+            });
             setStatus("success");
             setEmail("");
             setMessage("");
