@@ -883,7 +883,7 @@ const DatabaseMigration = ({ data }: { data: any }) => {
             This action will take all the changes you've made in your browser so far (Blog, Projects, Biography, Gallery, Hero Images) and forcefully push them to your connected PocketBase cloud database.
           </p>
           <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-sm">
-            <strong>Warning:</strong> Ensure you have imported the `pocketbase_schema.json` file in your PocketBase Settings -> Import Collections before running this. This will overwrite existing data in the cloud.
+            <strong>Warning:</strong> Ensure you have imported the `pocketbase_schema.json` file in your PocketBase Settings &rarr; Import Collections before running this. This will overwrite existing data in the cloud.
           </div>
         </div>
 
