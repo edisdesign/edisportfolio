@@ -143,7 +143,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     console.log("PocketBase is empty, loading from localStorage fallback");
                     try {
                         const saved = localStorage.getItem("portfolioData");
-                        if (saved) setData(JSON.parse(saved));
+                        if (saved) {
+                            const parsed = JSON.parse(saved);
+                            setData(prev => ({ ...prev, ...parsed }));
+                        }
                     } catch (e) {
                         console.error("Local storage parse error", e);
                         localStorage.removeItem("portfolioData");
@@ -153,7 +156,10 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 console.error("Failed to fetch from PocketBase:", error);
                 try {
                     const saved = localStorage.getItem("portfolioData");
-                    if (saved) setData(JSON.parse(saved));
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        setData(prev => ({ ...prev, ...parsed }));
+                    }
                 } catch (e) {
                     console.error("Local storage error", e);
                 }

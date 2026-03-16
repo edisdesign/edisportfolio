@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Navbar } from "./components/portfolio/Navbar";
 import { Hero } from "./components/portfolio/Hero";
@@ -18,20 +18,28 @@ import { Blog } from "./components/portfolio/Blog";
 import pb from "./lib/pocketbase";
 
 // Basic error boundary component
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
   constructor(props: any) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
-  static getDerivedStateFromError() { return { hasError: true }; }
+  static getDerivedStateFromError(error: any) { return { hasError: true, error }; }
   componentDidCatch(error: any, errorInfo: any) { console.error("App Crash:", error, errorInfo); }
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-8 text-center">
-          <div>
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-8 text-center text-white">
+          <div className="max-w-md">
             <h1 className="text-2xl font-bold mb-4">Something went wrong.</h1>
-            <button onClick={() => window.location.reload()} className="px-6 py-2 bg-white text-black rounded-full font-bold">Reload Page</button>
+            <p className="text-zinc-500 text-sm mb-6 font-mono bg-black/50 p-4 rounded border border-white/10 break-all">
+              {this.state.error?.toString() || "Unknown error"}
+            </p>
+            <button onClick={() => {
+              localStorage.removeItem("portfolioData");
+              window.location.reload();
+            }} className="px-6 py-2 bg-white text-black rounded-full font-bold hover:bg-zinc-200 transition-colors">
+              Reset & Reload Page
+            </button>
           </div>
         </div>
       );
@@ -53,6 +61,17 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // When admin logs in from Footer, both become true
   if (isAdmin && showAdminPanel) {
     return <AdminDashboard
@@ -63,7 +82,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <main className="bg-zinc-950 min-h-screen text-white selection:bg-indigo-500/30 cursor-none relative" style={{ backgroundColor: '#09090b' }}>
+      <main className={`bg-zinc-950 min-h-screen text-white selection:bg-indigo-500/30 relative ${!isMobile ? 'cursor-none' : ''}`} style={{ backgroundColor: '#09090b' }}>
         <div className="overflow-x-hidden w-full min-h-screen relative">
         <AnimatePresence mode="wait">
           {showIntro && (
@@ -81,7 +100,7 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {!showIntro && <CustomCursor />}
+        {!showIntro && !isMobile && <CustomCursor />}
 
         <motion.div
           initial={{ opacity: 0 }}

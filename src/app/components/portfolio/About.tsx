@@ -512,7 +512,7 @@ export const About = ({ language }: AboutProps) => {
     ];
 
     return (
-        <section id="about" className="py-24 bg-zinc-950 relative overflow-hidden">
+        <section id="about" className="py-24 bg-zinc-950 relative">
             {/* Background Glow */}
             <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
 
