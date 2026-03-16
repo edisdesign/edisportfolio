@@ -13,6 +13,7 @@ import { ChaosIntro } from "./components/portfolio/ChaosIntro";
 import { ProjectModal } from "./components/portfolio/ProjectModal";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { Blog } from "./components/portfolio/Blog";
+import pb from "./lib/pocketbase";
 
 export default function App() {
   const [language, setLanguage] = useState("DE");

@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { usePortfolioData } from "../../context/PortfolioContext";
 import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database, Globe } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import pb from "../../lib/pocketbase";
 
 // Compress image utility - AGGRESSIVE compression for Base64 storage
 const compressImage = (file: File, maxWidth = 1024, maxHeight = 1024, quality = 0.6): Promise<string> => {
