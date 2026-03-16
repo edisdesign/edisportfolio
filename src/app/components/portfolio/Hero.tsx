@@ -176,7 +176,7 @@ export const Hero = ({ language }: HeroProps) => {
 
           {/* Right Side: Visual Carousel */}
           <div
-            className="relative hidden lg:flex items-center justify-center h-[600px] perspective-[1000px]"
+            className="relative flex items-center justify-center h-[400px] md:h-[500px] lg:h-[600px] perspective-[1000px] mt-12 lg:mt-0"
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
@@ -191,76 +191,58 @@ export const Hero = ({ language }: HeroProps) => {
                   <motion.div
                     key={index}
                     onClick={() => handleImageClick(index)}
-                    onMouseLeave={() => {
-                      if (isExpanded) setExpandedIndex(null);
+                    onDragEnd={(_, info) => {
+                      if (info.offset.x > 50) {
+                        setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
+                      } else if (info.offset.x < -50) {
+                        setActiveIndex((prev) => (prev + 1) % images.length);
+                      }
+                      setExpandedIndex(null);
                     }}
-                    className={`absolute h-[500px] rounded-3xl overflow-hidden cursor-pointer shadow-2xl border border-[#ffffff1a] bg-[#18181b] ${isCenter ? "z-30" : "z-10"
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    className={`absolute h-[320px] md:h-[450px] lg:h-[500px] rounded-3xl overflow-hidden cursor-pointer shadow-2xl border border-[#ffffff1a] bg-[#18181b] ${isCenter ? "z-30" : "z-10"
                       }`}
                     initial={false}
                     animate={{
-                      width: isExpanded ? 800 : 400,
+                      width: isExpanded ? (window.innerWidth > 1024 ? 800 : 320) : (window.innerWidth > 1024 ? 400 : 260),
                       scale: isCenter ? 1 : 0.75,
                       x: isCenter
                         ? 0
                         : position === "right"
-                          ? 220
-                          : -220,
+                          ? (window.innerWidth > 1024 ? 220 : 100)
+                          : (window.innerWidth > 1024 ? -220 : -100),
                       opacity: isCenter ? 1 : 0.3,
                       rotateY: isCenter
                         ? 0
                         : position === "right"
                           ? -30
                           : 30,
-                      rotateZ: isCenter
-                        ? 0
-                        : position === "right"
-                          ? 5
-                          : -5,
-                      filter: isCenter
-                        ? "blur(0px)"
-                        : "blur(3px)",
                     }}
                     transition={{
                       duration: 0.8,
                       ease: [0.16, 1, 0.3, 1],
                     }}
-                    whileHover={{
-                      scale: isCenter
-                        ? isExpanded
-                          ? 1
-                          : 1.02
-                        : 0.8,
-                    }}
                   >
-                    <div className="relative w-full h-full">
+                    <div className="relative w-full h-full touch-none">
                       <motion.img
                         src={img.src}
                         alt="Carousel Item"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover pointer-events-none"
                         animate={{ scale: isExpanded ? 1 : 1.15 }}
                         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60" />
-
-                      {/* Grid Overlays (Only visible on center image for cleaner look) */}
-                      {isCenter && (
-                        <div className="absolute inset-0 pointer-events-none">
-                          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
-                          <div className="absolute top-4 right-4 p-2 bg-zinc-950/50 backdrop-blur-sm rounded-lg border border-white/10">
-                            <Grid3X3 className="w-4 h-4 text-white/50" />
-                          </div>
-                        </div>
-                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60 pointer-events-none" />
 
                       {/* Label Badge */}
-                      <div className="absolute bottom-6 left-6">
+                      <div className="absolute bottom-6 left-6 pointer-events-none">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-950/80 backdrop-blur-md border border-white/10">
                           {index % 2 === 0 ? (
                             <User className="w-3 h-3 text-indigo-400" />
                           ) : (
                             <Palette className="w-3 h-3 text-purple-400" />
                           )}
-                          <span className="text-xs font-medium text-white">
+                          <span className="text-[10px] font-medium text-white">
                             {img.label}
                           </span>
                         </div>
@@ -272,7 +254,7 @@ export const Hero = ({ language }: HeroProps) => {
             </div>
 
             {/* Background Glows */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 blur-[100px] -z-10 rounded-full pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 blur-[60px] md:blur-[100px] -z-10 rounded-full pointer-events-none" />
           </div>
         </div>
       </div>

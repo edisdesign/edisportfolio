@@ -55,7 +55,7 @@ export const Experience = ({ language }: ExperienceProps) => {
             style={{ height: lineHeight }}
           />
 
-          <div className="space-y-12">
+          <div className="space-y-8 md:space-y-12">
             {timelineData.map((item: any, index: number) => {
               const isEven = index % 2 === 0;
 
@@ -65,40 +65,39 @@ export const Experience = ({ language }: ExperienceProps) => {
                   {/* Center Node */}
                   <div className="absolute left-[20px] md:left-1/2 w-4 h-4 rounded-full bg-zinc-950 border-2 border-indigo-500 -translate-x-1/2 z-20 shadow-[0_0_15px_rgba(99,102,241,0.5)]"></div>
 
-                  {/* Left Content (Empty on Mobile) */}
-                  <div className={`hidden md:block w-5/12 ${isEven ? 'text-right pr-12' : 'col-start-2 pl-12 opacity-0'}`}>
+                  {/* Left Content (Desktop Only) */}
+                  <div className={`hidden md:block w-5/12 ${isEven ? 'text-right pr-12' : 'opacity-0'}`}>
                     {isEven && (
                       <motion.div
                         initial={{ opacity: 0, x: -30 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
-                        className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-sm"
+                        className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl backdrop-blur-sm hover:border-indigo-500/50 transition-all duration-300"
                       >
-                        <div className="text-indigo-400 font-bold mb-1">{item.year}</div>
-                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                        <div className="text-white/60 mb-3">{item.company}</div>
+                        <div className="text-indigo-400 font-bold mb-1 text-sm uppercase tracking-wider">{item.year}</div>
+                        <h3 className="text-xl font-bold text-white group-hover:text-indigo-300">{item.title}</h3>
+                        <div className="text-zinc-500 mb-3 text-sm">{item.company}</div>
                         <p className="text-zinc-400 text-sm leading-relaxed">{item.description}</p>
                       </motion.div>
                     )}
                   </div>
 
-                  {/* Right Content */}
-                  <div className={`w-full pl-16 md:w-5/12 md:pl-0 ${isEven ? 'md:col-start-2 md:pl-12 md:opacity-0 hidden md:block' : 'md:text-left md:pl-12'}`}>
-                    {(!isEven || true) && (
+                  {/* Right Content / Mobile Content */}
+                  <div className={`w-full pl-12 md:w-5/12 md:pl-0 ${isEven ? 'md:hidden' : 'md:text-left md:pl-12'}`}>
                       <motion.div
-                        initial={{ opacity: 0, x: isEven ? 0 : 30, y: isEven ? 30 : 0 }}
-                        whileInView={{ opacity: 1, x: 0, y: 0 }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        className={`bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-sm ${isEven ? 'md:hidden' : ''}`}
+                        initial={{ opacity: 0, x: 30, scale: 0.95 }}
+                        whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        className="bg-zinc-900/50 border border-zinc-800 p-5 md:p-6 rounded-2xl backdrop-blur-sm hover:border-indigo-500/50 transition-all duration-300"
                       >
-                        <div className="text-indigo-400 font-bold mb-1">{item.year}</div>
-                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                        <div className="text-white/60 mb-3">{item.company}</div>
-                        <p className="text-zinc-400 text-sm leading-relaxed">{item.description}</p>
+                        <div className="text-indigo-400 font-bold mb-1 text-xs md:text-sm uppercase tracking-wider">{item.year}</div>
+                        <h3 className="text-lg md:text-xl font-bold text-white leading-tight">{item.title}</h3>
+                        <div className="text-zinc-500 mb-3 text-xs md:text-sm">{item.company}</div>
+                        <p className="text-zinc-400 text-xs md:text-sm leading-relaxed line-clamp-3 md:line-clamp-none">
+                          {item.description}
+                        </p>
                       </motion.div>
-                    )}
                   </div>
-
                 </div>
               );
             })}
