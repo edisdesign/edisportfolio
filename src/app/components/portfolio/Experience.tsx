@@ -12,13 +12,14 @@ export const Experience = ({ language }: ExperienceProps) => {
   
   const containerRef = useRef<HTMLDivElement>(null);
 
-  if (isLoading) return <div className="py-24 bg-zinc-950 min-h-[300px]" />;
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end center"]
   });
 
   const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  if (isLoading) return <div className="py-24 bg-zinc-950 min-h-[300px]" />;
 
   const translations = {
     DE: { title: "Erfahrung & Werdegang" },

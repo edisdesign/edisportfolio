@@ -187,8 +187,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         const existingProjects = await pb.collection('projects').getFullList().catch(() => []);
                         
                         // Flatten incoming projects to gather IDs
-                        const incomingProjects = ['DE', 'EN', 'SR'].flatMap(lang => 
-                            updated.projectsData[lang as any].map((p: any) => ({ ...p, language: lang }))
+                        const incomingProjects = (['DE', 'EN', 'SR'] as const).flatMap(lang => 
+                            updated.projectsData[lang].map((p: any) => ({ ...p, language: lang }))
                         );
                         const incomingIds = incomingProjects.map(p => p.id);
 
@@ -198,12 +198,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                             }
                         }
 
-                        for (const lang of ['DE', 'EN', 'SR']) {
-                            for (const [index, proj] of updated.projectsData[lang as any].entries()) {
+                        for (const lang of (['DE', 'EN', 'SR'] as const)) {
+                            for (const [index, proj] of updated.projectsData[lang].entries()) {
                                 const payload = { ...proj, language: lang, sort_order: index };
                                 const exists = existingProjects.some(ep => ep.id === proj.id);
                                 if (exists) {
-                                    await pb.collection('projects').update(proj.id, payload).catch(() => {});
+                                    await pb.collection('projects').update(proj.id.toString(), payload).catch(() => {});
                                 } else {
                                     // Make sure not to pass an invalid ID on create
                                     const { id, ...createPayload } = payload;
@@ -261,8 +261,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     if (newData.experienceData) {
                         const existingTimeline = await pb.collection('experience_timeline').getFullList().catch(() => []);
                         
-                        const incomingTimeline = ['DE', 'EN', 'SR'].flatMap(lang => 
-                            updated.experienceData[lang as any].map((t: any) => ({ ...t, language: lang }))
+                        const incomingTimeline = (['DE', 'EN', 'SR'] as const).flatMap(lang => 
+                            updated.experienceData[lang].map((t: any) => ({ ...t, language: lang }))
                         );
                         const incomingIds = incomingTimeline.map(t => t.id);
 
@@ -272,8 +272,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                             }
                         }
 
-                        for (const lang of ['DE', 'EN', 'SR']) {
-                            for (const [index, item] of updated.experienceData[lang as any].entries()) {
+                        for (const lang of (['DE', 'EN', 'SR'] as const)) {
+                            for (const [index, item] of updated.experienceData[lang].entries()) {
                                 const payload = { ...item, language: lang, sort_order: index };
                                 const exists = existingTimeline.some(et => et.id === item.id);
                                 if (exists) {

@@ -21,8 +21,6 @@ export const Hero = ({ language }: HeroProps) => {
   const images = data.heroImages || [];
 
   const [activeIndex, setActiveIndex] = useState(0);
-
-  if (isLoading) return <div className="h-screen bg-black" />;
   const [expandedIndex, setExpandedIndex] = useState<
     number | null
   >(null);
@@ -30,12 +28,14 @@ export const Hero = ({ language }: HeroProps) => {
 
   // Auto-shuffle every 4 seconds
   useEffect(() => {
-    if (isHovering || expandedIndex !== null) return;
+    if (isHovering || expandedIndex !== null || !images.length) return;
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % images.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, [isHovering, expandedIndex]);
+  }, [isHovering, expandedIndex, images.length]);
+
+  if (isLoading) return <div className="h-screen bg-black" />;
 
   const handleImageClick = (index: number) => {
     if (index === activeIndex) {

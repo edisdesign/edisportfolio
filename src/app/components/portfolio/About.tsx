@@ -15,8 +15,6 @@ export const About = ({ language }: AboutProps) => {
     const galleryImages = data.galleryImages || [];
 
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
-
-    if (isLoading) return <div className="min-h-screen bg-black" />;
     const [comments, setComments] = useState<any[]>([]);
     const [newComment, setNewComment] = useState("");
     const [newCommentName, setNewCommentName] = useState("");
@@ -55,6 +53,8 @@ export const About = ({ language }: AboutProps) => {
             setNewComment("");
         }
     }, [selectedImage?.id]);
+
+    if (isLoading) return <div className="min-h-screen bg-black" />;
 
     const handleLike = async () => {
         if (!selectedImage || isLiking || !selectedImage.id) return;
