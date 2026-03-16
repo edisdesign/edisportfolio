@@ -805,7 +805,7 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
       excerpt: 'Kurze Zusammenfassung...',
       content: 'Inhalt des Beitrags...',
       image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&auto=format&fit=crop',
-      date: new Date().toISOString(),
+      date: new Date().toISOString().replace('T', ' '),
       author: 'Edis Muminović',
       language: selectedLang
     };
@@ -839,7 +839,7 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
           excerpt: translatedExcerpt,
           content: translatedContent,
           language: targetLang,
-          date: new Date().toISOString()
+          date: new Date().toISOString().replace('T', ' ')
         };
         newData.push(newPost);
       }
@@ -859,12 +859,12 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
 
   const handleSeed = () => {
     const mockPosts = [
-      { id: '1', title: 'The Future of Minimalism', slug: 'minimalism', excerpt: 'How less is becoming more in modern design systems.', content: 'Minimalism is not about the lack of something. It is about the perfect amount of something...', image: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=800', date: new Date().toISOString(), author: 'Edis', language: 'EN' },
-      { id: '2', title: 'Why Typography Matters', slug: 'typography', excerpt: 'The silent voice of your interface.', content: 'Typography is more than just selecting a font. It is about hierarchy, readability, and mood...', image: 'https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?w=800', date: new Date().toISOString(), author: 'Edis', language: 'EN' },
-      { id: '3', title: 'Micro-interactions', slug: 'micro-interactions', excerpt: 'Small details, big impact on UX.', content: 'Micro-interactions are the functional animations that provide feedback and delight...', image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?w=800', date: new Date().toISOString(), author: 'Edis', language: 'DE' },
-      { id: '4', title: 'Design Systeme', slug: 'design-systeme', excerpt: 'Skalierbare Design-Lösungen für moderne Apps.', content: 'Ein gutes Design-System ist die Grundlage für jede erfolgreiche digitale Konsistenz...', image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800', date: new Date().toISOString(), author: 'Edis', language: 'DE' },
-      { id: '5', title: 'Umetnost Dizajna', slug: 'umetnost-dizajna', excerpt: 'Ravnoteža između estetike i funkcionalnosti.', content: 'Dizajn nije samo ono kako izgleda, već i kako funkcioniše u rukama korisnika...', image: 'https://images.unsplash.com/photo-1508261301902-69a303ba780a?w=800', date: new Date().toISOString(), author: 'Edis', language: 'SR' },
-      { id: '6', title: 'Portfolio Razvoj', slug: 'portfolio-razvoj', excerpt: 'Kako izgraditi prepoznatljiv brend.', content: 'Vaš portfolio je vaša vizuelna biografija. Svaki detalj priča priču o vašem radu...', image: 'https://images.unsplash.com/photo-1542744095-2ad4870f62dd?w=800', date: new Date().toISOString(), author: 'Edis', language: 'SR' }
+      { id: '1', title: 'The Future of Minimalism', slug: 'minimalism', excerpt: 'How less is becoming more in modern design systems.', content: 'Minimalism is not about the lack of something. It is about the perfect amount of something...', image: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=800', date: new Date().toISOString().replace('T', ' '), author: 'Edis', language: 'EN' },
+      { id: '2', title: 'Why Typography Matters', slug: 'typography', excerpt: 'The silent voice of your interface.', content: 'Typography is more than just selecting a font. It is about hierarchy, readability, and mood...', image: 'https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?w=800', date: new Date().toISOString().replace('T', ' '), author: 'Edis', language: 'EN' },
+      { id: '3', title: 'Micro-interactions', slug: 'micro-interactions', excerpt: 'Small details, big impact on UX.', content: 'Micro-interactions are the functional animations that provide feedback and delight...', image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?w=800', date: new Date().toISOString().replace('T', ' '), author: 'Edis', language: 'DE' },
+      { id: '4', title: 'Design Systeme', slug: 'design-systeme', excerpt: 'Skalierbare Design-Lösungen für moderne Apps.', content: 'Ein gutes Design-System ist die Grundlage für jede erfolgreiche digitale Konsistenz...', image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800', date: new Date().toISOString().replace('T', ' '), author: 'Edis', language: 'DE' },
+      { id: '5', title: 'Umetnost Dizajna', slug: 'umetnost-dizajna', excerpt: 'Ravnoteža između estetike i funkcionalnosti.', content: 'Dizajn nije samo ono kako izgleda, već i kako funkcioniše u rukama korisnika...', image: 'https://images.unsplash.com/photo-1508261301902-69a303ba780a?w=800', date: new Date().toISOString().replace('T', ' '), author: 'Edis', language: 'SR' },
+      { id: '6', title: 'Portfolio Razvoj', slug: 'portfolio-razvoj', excerpt: 'Kako izgraditi prepoznatljiv brend.', content: 'Vaš portfolio je vaša vizuelna biografija. Svaki detalj priča priču o vašem radu...', image: 'https://images.unsplash.com/photo-1542744095-2ad4870f62dd?w=800', date: new Date().toISOString().replace('T', ' '), author: 'Edis', language: 'SR' }
     ];
     setLocalData([...mockPosts, ...localData]);
   };
