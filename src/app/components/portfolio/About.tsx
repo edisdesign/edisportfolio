@@ -299,7 +299,7 @@ export const About = ({ language }: AboutProps) => {
                             {/* Background Image with Blur */}
                             <div
                                 className="absolute inset-0 bg-cover bg-center opacity-40 group-hover:opacity-60 transition-all duration-700 blur-sm group-hover:blur-0 scale-100 group-hover:scale-110"
-                                style={{ backgroundImage: `url(${galleryImages[0]?.src})` }}
+                                style={{ backgroundImage: galleryImages[0]?.src ? `url(${galleryImages[0].src})` : 'none' }}
                             />
                             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors duration-500" />
 

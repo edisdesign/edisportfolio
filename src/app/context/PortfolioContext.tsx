@@ -122,10 +122,21 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         }
                     });
 
-                    const freshData = {
-                        heroImages: content?.hero_images || [],
+                    const freshData: PortfolioData = {
+                        heroImages: (content?.hero_images || []).map((img: any, i: number) => ({
+                            id: img.id || `hero-${i}`,
+                            src: img.src || "",
+                            type: img.type || "image",
+                            label: img.label || ""
+                        })),
                         projectsData: formattedProjects,
-                        galleryImages: gallery as unknown as GalleryImage[] || [],
+                        galleryImages: gallery.map((img: any) => ({
+                            id: img.id,
+                            src: img.src || "",
+                            title: img.title || "",
+                            description: img.description || "",
+                            likes_count: img.likes_count || 0
+                        })) as GalleryImage[],
                         bioData: {
                             DE: content?.bio_de || { role: "", bio: "" },
                             EN: content?.bio_en || { role: "", bio: "" },
@@ -137,7 +148,17 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                             SR: content?.status_sr || ""
                         },
                         experienceData: formattedTimeline.DE.length || formattedTimeline.EN.length || formattedTimeline.SR.length ? formattedTimeline : defaultExperienceData,
-                        blogPosts: blog as unknown as BlogPost[] || []
+                        blogPosts: blog.map((p: any) => ({
+                            id: p.id,
+                            title: p.title || "",
+                            slug: p.slug || "",
+                            excerpt: p.excerpt || "",
+                            content: p.content || "",
+                            image: p.image || "",
+                            date: p.date || new Date().toISOString(),
+                            author: p.author || "Edi",
+                            language: p.language || "DE"
+                        })) as BlogPost[]
                     };
                     setData(freshData);
                     localStorage.setItem("portfolioData", JSON.stringify(freshData));
