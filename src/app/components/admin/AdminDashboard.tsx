@@ -213,7 +213,7 @@ const BioEditor = ({ data, updateData }: { data: any, updateData: (data: any) =>
 
   const handleSave = () => {
     updateData(localData);
-    alert('Biography updated successfully (saved locally)');
+    alert('Biography is syncing to PocketBase...');
   };
 
   return (
@@ -284,7 +284,7 @@ const HeroImagesEditor = ({ data, updateData }: { data: any[], updateData: (data
 
   const handleSave = () => {
     updateData(localData);
-    alert('Hero images updated successfully (saved locally)');
+    alert('Hero images are syncing to PocketBase...');
   };
 
   const handleFileUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -473,7 +473,7 @@ const ProjectsEditor = ({ data, updateData }: { data: any, updateData: (data: an
 
   const handleSave = () => {
     updateData(localData);
-    alert('Projects updated successfully (saved locally)');
+    alert('Projects are syncing to PocketBase...');
   };
 
   const handleFileUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -674,7 +674,7 @@ const GalleryEditor = ({ data, updateData }: { data: any[], updateData: (data: a
 
   const handleSave = () => {
     updateData(localData);
-    alert('Gallery updated successfully (saved locally)');
+    alert('Gallery is syncing to PocketBase...');
   };
 
   const handleFileUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -854,7 +854,7 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
 
   const handleSave = () => {
     updateData(localData);
-    alert('Blog posts saved locally');
+    alert('Blog posts are syncing to PocketBase...');
   };
 
   const handleSeed = () => {
