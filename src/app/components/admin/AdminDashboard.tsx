@@ -801,74 +801,62 @@ const DatabaseMigration = ({ data }: { data: any }) => {
   const [status, setStatus] = useState<string>('');
 
   const handleMigrate = async () => {
-    if (!confirm('Are you sure you want to completely overwrite the cloud database with your current local settings? Make sure you ran the SQL setup script first!')) return;
+    if (!confirm('Are you sure you want to completely overwrite the cloud database (PocketBase) with your current local settings?')) return;
 
     setIsMigrating(true);
-    setStatus('Starting migration...');
+    setStatus('Starting migration to PocketBase...');
 
     try {
       setStatus('Uploading general settings (Hero & Bio)...');
-
+      
       const contentPayload = {
-        id: '00000000-0000-0000-0000-000000000000',
         hero_images: data.heroImages,
         bio_de: data.bioData.DE,
         bio_en: data.bioData.EN,
         bio_sr: data.bioData.SR
       };
 
-      const { error: contentError } = await supabase
-        .from('portfolio_content')
-        .upsert(contentPayload);
-
-      if (contentError) throw new Error(`Content Error: ${contentError.message}`);
-
-      setStatus('Uploading projects...');
-      await supabase.from('projects').delete().neq('language', 'none');
-
-      const allProjects: any[] = [];
-      ['DE', 'EN', 'SR'].forEach(lang => {
-        data.projectsData[lang as 'DE' | 'EN' | 'SR'].forEach((proj: any, index: number) => {
-          allProjects.push({
-            language: lang,
-            title: proj.title,
-            category: proj.category,
-            description: proj.description,
-            challenge: proj.challenge,
-            solution: proj.solution,
-            image: proj.image,
-            size: proj.size,
-            link: proj.link,
-            roles: proj.roles || [],
-            tools: proj.tools || [],
-            sort_order: index
-          });
-        });
-      });
-
-      const { error: projError } = await supabase.from('projects').insert(allProjects);
-      if (projError) throw new Error(`Projects Error: ${projError.message}`);
-
-      setStatus('Uploading gallery images in smaller batches to avoid payload limits...');
-      await supabase.from('gallery_images').delete().neq('src', 'none');
-
-      const galleryPayload = data.galleryImages.map((img: any, index: number) => ({
-        src: img.src,
-        title: img.title || '',
-        description: img.description || '',
-        sort_order: index
-      }));
-
-      // Insert gallery images one by one or in small batches to avoid 413 Payload Too Large
-      for (const galItem of galleryPayload) {
-        const { error: galError } = await supabase.from('gallery_images').insert([galItem]);
-        if (galError) throw new Error(`Gallery Error: ${galError.message}`);
+      try {
+        const existing = await pb.collection('portfolio_content').getFirstListItem('id="000000000000000"').catch(() => null);
+        if (existing) {
+          await pb.collection('portfolio_content').update(existing.id, contentPayload);
+        } else {
+          await pb.collection('portfolio_content').create({ id: '000000000000000', ...contentPayload });
+        }
+      } catch (e) {
+        console.error(e);
       }
 
-      setStatus('Migration complete! Refresh the page to see changes. If images are missing, they were too large even after compression.');
+      setStatus('Uploading projects...');
+      // Clear and re-upload projects (simulated bulk)
+      const existingProjects = await pb.collection('projects').getFullList();
+      for (const p of existingProjects) await pb.collection('projects').delete(p.id);
+
+      for (const lang of ['DE', 'EN', 'SR']) {
+        for (const [index, proj] of data.projectsData[lang as any].entries()) {
+          await pb.collection('projects').create({
+            ...proj,
+            language: lang,
+            sort_order: index
+          });
+        }
+      }
+
+      setStatus('Uploading gallery...');
+      const existingGallery = await pb.collection('gallery_images').getFullList();
+      for (const g of existingGallery) await pb.collection('gallery_images').delete(g.id);
+      
+      for (const [index, img] of data.galleryImages.entries()) {
+        await pb.collection('gallery_images').create({
+          ...img,
+          sort_order: index
+        });
+      }
+
+      setStatus('Migration complete! Refresh to see changes on PocketBase.');
     } catch (error: any) {
       console.error(error);
-      setStatus(`Error during migration: ${error.message}. Try reducing image sizes.`);
+      setStatus(`Error during migration: ${error.message}`);
     } finally {
       setIsMigrating(false);
     }
@@ -915,6 +903,7 @@ const DatabaseMigration = ({ data }: { data: any }) => {
 const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[]) => void }) => {
   const [localData, setLocalData] = useState(data);
   const [selectedLang, setSelectedLang] = useState('DE');
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const handleUpdatePost = (index: number, field: string, value: any) => {
     const newData = [...localData];
@@ -941,6 +930,40 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
     const newData = [...localData];
     newData.splice(index, 1);
     setLocalData(newData);
+  };
+
+  const handleTranslatePost = async (postIndex: number, sourceLang: string) => {
+    setIsTranslating(true);
+    const targetLangs = ['DE', 'EN', 'SR'].filter(l => l !== sourceLang);
+    const sourcePost = localData[postIndex];
+
+    try {
+      const newData = [...localData];
+      for (const targetLang of targetLangs) {
+        const translatedTitle = await translateText(sourcePost.title, sourceLang, targetLang);
+        const translatedExcerpt = await translateText(sourcePost.excerpt, sourceLang, targetLang);
+        const translatedContent = await translateText(sourcePost.content, sourceLang, targetLang);
+
+        // Check if there's already a translated version (by checking slug/title similarity or internal ID if we had one)
+        // For now, let's just create new ones or update if ID matches and it's just a lang diff
+        const newPost = {
+          ...sourcePost,
+          id: Date.now().toString() + targetLang,
+          title: translatedTitle,
+          excerpt: translatedExcerpt,
+          content: translatedContent,
+          language: targetLang,
+          date: new Date().toISOString()
+        };
+        newData.push(newPost);
+      }
+      setLocalData(newData);
+      alert('Post successfully translated to other languages!');
+    } catch (e) {
+      alert("Translation failed.");
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const handleSave = () => {
@@ -997,13 +1020,23 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 space-y-3">
-                  <input 
-                    type="text" 
-                    value={post.title}
-                    onChange={(e) => handleUpdatePost(globalIndex, 'title', e.target.value)}
-                    className="w-full bg-transparent text-xl font-bold border-b border-white/10 focus:border-white outline-none pb-1"
-                    placeholder="Post Title"
-                  />
+                  <div className="flex justify-between items-start">
+                    <input 
+                      type="text" 
+                      value={post.title}
+                      onChange={(e) => handleUpdatePost(globalIndex, 'title', e.target.value)}
+                      className="w-full bg-transparent text-xl font-bold border-b border-white/10 focus:border-white outline-none pb-1"
+                      placeholder="Post Title"
+                    />
+                    <button
+                      onClick={() => handleTranslatePost(globalIndex, selectedLang)}
+                      disabled={isTranslating}
+                      className={`ml-4 flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors shrink-0 ${isTranslating ? 'bg-white/10 text-white/40' : 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40'}`}
+                    >
+                      <Globe size={14} />
+                      <span className="text-[10px] uppercase font-bold">{isTranslating ? '...' : 'Translate'}</span>
+                    </button>
+                  </div>
                   <textarea 
                     value={post.excerpt}
                     onChange={(e) => handleUpdatePost(globalIndex, 'excerpt', e.target.value)}
