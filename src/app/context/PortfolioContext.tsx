@@ -91,7 +91,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 const gallery = await pb.collection('gallery_images').getFullList({ sort: 'sort_order' }).catch(() => []);
                 const blog = await pb.collection('blog_posts').getFullList({ sort: '-date' }).catch(() => []);
 
-                if (content || projects.length > 0 || gallery.length > 0) {
+                if (content || projects.length > 0 || gallery.length > 0 || blog.length > 0) {
                     const formattedProjects = { DE: [], EN: [], SR: [] } as any;
                     projects.forEach((p: any) => {
                         if (formattedProjects[p.language]) {
@@ -111,6 +111,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         blogPosts: blog as unknown as BlogPost[] || []
                     });
                 } else {
+                    console.log("PocketBase is empty, loading from localStorage fallback");
                     const saved = localStorage.getItem("portfolioData");
                     if (saved) setData(JSON.parse(saved));
                 }
