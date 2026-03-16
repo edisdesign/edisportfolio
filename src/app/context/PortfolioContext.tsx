@@ -196,7 +196,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                     },
                     experienceData: (formattedTimeline.DE.length || formattedTimeline.EN.length || formattedTimeline.SR.length) ? formattedTimeline : defaultExperienceData,
                     blogPosts: formattedBlog,
-                    avatar_url: content?.avatar_url || defaultData.avatar_url
+                    avatar_url: (content?.avatar ? getFileUrl(content, content.avatar) : null) || content?.avatar_url || defaultData.avatar_url
                 };
                 setData(freshData);
             } else {

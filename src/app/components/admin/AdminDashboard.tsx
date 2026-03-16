@@ -807,64 +807,75 @@ const ProjectsEditor = ({ onDataChanged }: { onDataChanged: () => Promise<void> 
   );
 };
 
-// Profile / Avatar Editor
+// Profile / Avatar Editor — uploads avatar as file to PocketBase
 const ProfileEditor = ({ avatarUrl, updateData }: { avatarUrl: string, updateData: (url: string) => void }) => {
   const [localUrl, setLocalUrl] = useState(avatarUrl);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      try {
-        // Convert to data URL for avatar (small image, OK as base64 in text field)
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          const canvas = document.createElement('canvas');
-          const img = new Image();
-          img.src = reader.result as string;
-          img.onload = () => {
-            canvas.width = 400; canvas.height = 400;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, 400, 400);
-            setLocalUrl(canvas.toDataURL('image/jpeg', 0.8));
-          };
-        };
-      } catch (error) {
-        console.error("Image processing failed", error);
-      }
-    }
-  };
+    if (!file) return;
+    setIsUploading(true);
 
-  const handleSave = () => {
-    updateData(localUrl);
-    alert('Profile image saved!');
+    try {
+      // Upload avatar as a file to portfolio_content collection
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      // Get existing record or create new one
+      let record;
+      try {
+        record = await pb.collection('portfolio_content').getFirstListItem('id!="invalid"');
+        record = await pb.collection('portfolio_content').update(record.id, formData);
+      } catch {
+        record = await pb.collection('portfolio_content').create(formData);
+      }
+
+      // Build the file URL from PocketBase
+      if (record.avatar) {
+        const fileUrl = pb.files.getURL(record, record.avatar);
+        setLocalUrl(fileUrl);
+        updateData(fileUrl);
+      }
+      alert('Avatar uploaded successfully!');
+    } catch (error) {
+      console.error("Avatar upload failed:", error);
+      alert("Upload failed. Make sure the 'portfolio_content' collection has an 'avatar' file field.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex justify-between items-center border-b border-white/20 pb-4">
         <h2 className="text-2xl font-bold uppercase tracking-wider">Edit Profile Image</h2>
-        <button onClick={handleSave} className="bg-white text-black px-6 py-2 uppercase tracking-widest text-xs hover:bg-white/80 transition-colors">Save Avatar</button>
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <Database size={14} />
+          <span>Direct PocketBase sync</span>
+        </div>
       </div>
 
       <div className="max-w-md mx-auto text-center space-y-6">
         <div className="relative group mx-auto w-48 h-48 rounded-full overflow-hidden border-4 border-white/10 bg-zinc-900 flex items-center justify-center">
-          <img src={localUrl} alt="Preview" className="w-full h-full object-cover" />
+          {localUrl ? (
+            <img src={localUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          ) : (
+            <User size={64} className="text-zinc-600" />
+          )}
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
-            <label className="cursor-pointer flex flex-col items-center justify-center text-white/80 hover:text-white p-4">
-              <UploadCloud size={32} className="mb-2" />
-              <span className="text-[10px] uppercase tracking-widest font-bold">Upload New</span>
-              <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} />
+            <label className={`cursor-pointer flex flex-col items-center justify-center text-white/80 hover:text-white p-4 ${isUploading ? 'pointer-events-none opacity-50' : ''}`}>
+              {isUploading ? (
+                <><Loader2 size={32} className="animate-spin mb-2" /><span className="text-[10px] uppercase tracking-widest font-bold">Uploading...</span></>
+              ) : (
+                <><UploadCloud size={32} className="mb-2" /><span className="text-[10px] uppercase tracking-widest font-bold">Upload New</span></>
+              )}
+              <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={isUploading} />
             </label>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-white/60 mb-2 uppercase tracking-wider">Avatar URL (Direct Link)</label>
-            <input type="text" value={localUrl} onChange={(e) => setLocalUrl(e.target.value)} className="w-full bg-black border border-white/20 rounded p-3 text-white text-xs focus:outline-none focus:border-white transition-colors" />
-          </div>
-        </div>
+        <p className="text-xs text-zinc-500">Click the image to upload a new avatar. It will be saved to PocketBase immediately.</p>
       </div>
     </div>
   );
@@ -1041,8 +1052,28 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
                 <Trash size={18} />
               </button>
               <div className="flex gap-6">
-                <div className="w-1/4 aspect-video bg-black/50 rounded-lg overflow-hidden border border-white/10">
-                  <img src={post.image} alt={post.title} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }} />
+                <div className="w-1/4 aspect-video bg-black/50 rounded-lg overflow-hidden border border-white/10 relative group/img">
+                  {post.image ? (
+                    <img src={post.image} alt={post.title} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0.3'; }} />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-600"><ImageIcon size={32} /></div>
+                  )}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex flex-col items-center justify-center">
+                    <label className="cursor-pointer flex flex-col items-center justify-center text-white/80 hover:text-white p-2">
+                      <UploadCloud size={20} className="mb-1" />
+                      <span className="text-[8px] uppercase tracking-widest font-bold">Upload Image</span>
+                      <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.readAsDataURL(file);
+                          reader.onload = () => {
+                            handleUpdatePost(globalIndex, 'image', reader.result as string);
+                          };
+                        }
+                      }} />
+                    </label>
+                  </div>
                 </div>
                 <div className="flex-1 space-y-3">
                   <div className="flex justify-between items-start">
@@ -1063,7 +1094,7 @@ const BlogEditor = ({ data, updateData }: { data: any[], updateData: (data: any[
                 <textarea value={post.content} onChange={(e) => handleUpdatePost(globalIndex, 'content', e.target.value)} className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-sm outline-none focus:border-white/30 h-40 font-serif leading-relaxed" placeholder="Content..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <input type="text" value={post.image} onChange={(e) => handleUpdatePost(globalIndex, 'image', e.target.value)} className="bg-black/50 border border-white/10 rounded p-2 text-xs text-zinc-500" placeholder="Image URL" />
+                <input type="text" value={post.image} onChange={(e) => handleUpdatePost(globalIndex, 'image', e.target.value)} className="bg-black/50 border border-white/10 rounded p-2 text-xs text-zinc-500" placeholder="Image URL (or upload above)" />
                 <input type="text" value={post.author} onChange={(e) => handleUpdatePost(globalIndex, 'author', e.target.value)} className="bg-black/50 border border-white/10 rounded p-2 text-xs text-zinc-500" placeholder="Author" />
               </div>
             </div>
