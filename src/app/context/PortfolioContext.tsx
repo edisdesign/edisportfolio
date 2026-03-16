@@ -96,11 +96,13 @@ const PortfolioContext = createContext<PortfolioContextType>({
 
 import pb from "../lib/pocketbase";
 
-// Helper: Build PocketBase file URL
-const getFileUrl = (record: any, filename: string): string => {
+// Helper: get file URL from PocketBase record
+const getFileUrl = (record: any, filename: any): string => {
     if (!filename) return "";
-    if (filename.startsWith('http')) return filename;
-    return pb.files.getURL(record, filename);
+    const name = Array.isArray(filename) ? filename[0] : filename;
+    if (!name || typeof name !== 'string') return "";
+    if (name.startsWith('http')) return name;
+    return pb.files.getURL(record, name);
 };
 
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -167,19 +169,20 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                         formattedTimeline[lang].push(t);
                     }
                 });
-
-                // Format blog posts
-                const formattedBlog: BlogPost[] = blog.map((p: any) => ({
-                    id: p.id,
-                    title: p.title || "",
-                    slug: p.slug || "",
-                    excerpt: p.excerpt || "",
-                    content: p.content || "",
-                    image: p.image ? getFileUrl(p, p.image) : p.image_url,
-                    date: p.date || new Date().toISOString(),
-                    author: p.author || "Edi",
-                    language: p.language || "DE"
-                }));
+                
+                const formattedBlog: BlogPost[] = blog.map((p: any) => {
+                    return {
+                        id: p.id,
+                        title: p.title || "",
+                        slug: p.slug || "",
+                        excerpt: p.excerpt || "",
+                        content: p.content || "",
+                        image: p.image ? getFileUrl(p, p.image) : p.image_url,
+                        date: p.date || new Date().toISOString(),
+                        author: p.author || "Edi",
+                        language: p.language || "DE"
+                    };
+                });
 
                 const freshData: PortfolioData = {
                     heroImages: formattedHeroImages.length > 0 ? formattedHeroImages : defaultData.heroImages,

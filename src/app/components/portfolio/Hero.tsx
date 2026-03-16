@@ -107,6 +107,7 @@ export const Hero = ({ language }: HeroProps) => {
     <section
       id="hero"
       className="relative min-h-screen flex items-center justify-center bg-zinc-950 pt-20 lg:pt-0"
+      onClick={() => setExpandedIndex(null)}
     >
       {/* Background Gradient */}
       <div className="absolute inset-0 z-0">
@@ -126,6 +127,7 @@ export const Hero = ({ language }: HeroProps) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-left"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Status Badge */}
             <motion.div

@@ -30,10 +30,12 @@ const translateText = async (text: string, sourceLang: string, targetLang: strin
 };
 
 // Helper: get file URL from PocketBase record
-const getFileUrl = (record: any, filename: string): string => {
+const getFileUrl = (record: any, filename: any): string => {
   if (!filename) return "";
-  if (filename && typeof filename === 'string' && filename.startsWith('http')) return filename;
-  return pb.files.getURL(record, filename);
+  const name = Array.isArray(filename) ? filename[0] : filename;
+  if (!name || typeof name !== 'string') return "";
+  if (name.startsWith('http')) return name;
+  return pb.files.getURL(record, name);
 };
 
 interface AdminDashboardProps {
