@@ -7,7 +7,9 @@ export interface Project {
     category: string;
     description: string;
     challenge: string;
+    challenge_title?: string;
     solution: string;
+    solution_title?: string;
     roles: string[];
     tools: string[];
     image: string;

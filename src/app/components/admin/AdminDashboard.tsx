@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { usePortfolioData } from "../../context/PortfolioContext";
-import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database, Globe, Clock, Loader2 } from "lucide-react";
+import { Plus, Trash, Image as ImageIcon, Briefcase, User, Edit2, LogOut, UploadCloud, Database, Globe, Clock, Loader2, Layers, Code2, PenTool } from "lucide-react";
 import pb from "../../lib/pocketbase";
 
 // Auto-Translate utility using free Google Translate API
@@ -777,21 +777,45 @@ const ProjectsEditor = ({ onDataChanged }: { onDataChanged: () => Promise<void> 
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-white/60 mb-1 uppercase tracking-wider">Description</label>
+                    <label className="block text-xs text-white/60 mb-1 uppercase tracking-wider">Description <span className="text-zinc-600 normal-case">(kratki opis na kartici)</span></label>
                     <textarea rows={2} defaultValue={project.description} onBlur={(e) => handleUpdateField(project.id, 'description', e.target.value)} className="w-full bg-black/50 border border-white/20 rounded p-2 text-white text-sm focus:outline-none focus:border-white" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-indigo-400 mb-1 uppercase tracking-wider flex items-center gap-2">
+                      <Layers size={12} /> Challenge Section Title <span className="text-zinc-600 normal-case font-normal">(Default: Die Herausforderung)</span>
+                    </label>
+                    <input type="text" defaultValue={project.challenge_title || ''} onBlur={(e) => handleUpdateField(project.id, 'challenge_title', e.target.value)} placeholder="Die Herausforderung..." className="w-full bg-black/50 border border-indigo-500/30 rounded p-2 text-white text-sm focus:outline-none focus:border-indigo-500 mb-4" />
+                    <label className="block text-xs text-indigo-400 mb-1 uppercase tracking-wider flex items-center gap-2">
+                      <Layers size={12} /> Challenge Content <span className="text-zinc-600 normal-case font-normal">(modal)</span>
+                    </label>
+                    <textarea rows={4} defaultValue={project.challenge || ''} onBlur={(e) => handleUpdateField(project.id, 'challenge', e.target.value)} placeholder="Beschreibe die Herausforderung des Projekts..." className="w-full bg-black/50 border border-indigo-500/30 rounded p-2 text-white text-sm focus:outline-none focus:border-indigo-500 leading-relaxed" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-indigo-400 mb-1 uppercase tracking-wider flex items-center gap-2">
+                      <Code2 size={12} /> Solution Section Title <span className="text-zinc-600 normal-case font-normal">(Default: Die Lösung)</span>
+                    </label>
+                    <input type="text" defaultValue={project.solution_title || ''} onBlur={(e) => handleUpdateField(project.id, 'solution_title', e.target.value)} placeholder="Die Lösung..." className="w-full bg-black/50 border border-indigo-500/30 rounded p-2 text-white text-sm focus:outline-none focus:border-indigo-500 mb-4" />
+                    <label className="block text-xs text-indigo-400 mb-1 uppercase tracking-wider flex items-center gap-2">
+                      <Code2 size={12} /> Solution Content <span className="text-zinc-600 normal-case font-normal">(modal)</span>
+                    </label>
+                    <textarea rows={4} defaultValue={project.solution || ''} onBlur={(e) => handleUpdateField(project.id, 'solution', e.target.value)} placeholder="Beschreibe die Lösung und Umsetzung..." className="w-full bg-black/50 border border-indigo-500/30 rounded p-2 text-white text-sm focus:outline-none focus:border-indigo-500 leading-relaxed" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-white/60 mb-1 uppercase tracking-wider">Size</label>
-                      <select defaultValue={project.size} onChange={(e) => handleUpdateField(project.id, 'size', e.target.value)} className="w-full bg-black/50 border border-white/20 rounded p-2 text-white text-sm focus:outline-none focus:border-white">
-                        <option value="normal">Normal</option>
-                        <option value="large">Large (Full Width)</option>
-                      </select>
+                      <label className="block text-xs text-white/60 mb-1 uppercase tracking-wider flex items-center gap-2"><PenTool size={12} /> Meine Rolle (comma-separated)</label>
+                      <input type="text" defaultValue={project.roles?.join(', ') || ''} onBlur={(e) => handleUpdateField(project.id, 'roles', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))} placeholder="z.B. UX Designer, Developer" className="w-full bg-black/50 border border-white/20 rounded p-2 text-white text-sm focus:outline-none focus:border-white" />
                     </div>
                     <div>
                       <label className="block text-xs text-white/60 mb-1 uppercase tracking-wider flex items-center gap-2"><Briefcase size={12} /> Technologies (comma-separated)</label>
-                      <input type="text" defaultValue={project.tools?.join(', ') || ''} onBlur={(e) => handleUpdateField(project.id, 'tools', e.target.value.split(',').map((s: string) => s.trim()))} className="w-full bg-black/50 border border-white/20 rounded p-2 text-white text-sm focus:outline-none focus:border-white" />
+                      <input type="text" defaultValue={project.tools?.join(', ') || ''} onBlur={(e) => handleUpdateField(project.id, 'tools', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))} className="w-full bg-black/50 border border-white/20 rounded p-2 text-white text-sm focus:outline-none focus:border-white" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-white/60 mb-1 uppercase tracking-wider">Size</label>
+                    <select defaultValue={project.size} onChange={(e) => handleUpdateField(project.id, 'size', e.target.value)} className="w-full bg-black/50 border border-white/20 rounded p-2 text-white text-sm focus:outline-none focus:border-white">
+                      <option value="normal">Normal</option>
+                      <option value="large">Large (Full Width)</option>
+                    </select>
                   </div>
                 </div>
               </div>

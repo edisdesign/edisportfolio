@@ -151,17 +151,17 @@ export const ProjectModal = ({ onClose, project, language }: ProjectDetailsProps
                         <div>
                             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
                                 <Layers size={20} className="text-indigo-500" />
-                                {t.challenge}
+                                {project.challenge_title || t.challenge}
                             </h3>
                             <p className="text-zinc-400 leading-relaxed text-lg whitespace-pre-line">
-                                {project.challenge || project.description}
+                                {project.challenge}
                             </p>
                         </div>
 
                         <div>
                             <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
                                 <Code2 size={20} className="text-indigo-500" />
-                                {t.solution}
+                                {project.solution_title || t.solution}
                             </h3>
                             <p className="text-zinc-400 leading-relaxed text-lg whitespace-pre-line">
                                 {project.solution}
